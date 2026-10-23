@@ -12,3 +12,10 @@ A live, interactive sprint retrospective board, one retro per sprint.
 - AI (facilitator, via the `sample` capability): suggested note groups with theme names, action ideas for the topic under discussion, and a shared retro report
 
 `index.html` is published as a claude.ai Artifact (capabilities `db`, `room`, `user`, `sample`).
+
+## Standalone version (Vercel + Supabase)
+
+No claude.ai account needed: people open the link and type their name.
+
+- `web/shim.js` provides the same `window.claude.use()` surface (db, user, room) backed by Supabase (one `docs` table + Realtime presence). AI features are hidden there.
+- `python3 web/build.py` wraps `index.html` into `site/` (deployed to Vercel as a static site).
