@@ -1,0 +1,804 @@
+<title>Rétro Live</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=Kalam:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: workshop whiteboard. Sticky header with the step rail, columns of sticky notes, facilitator console docked at the bottom. */
+:root {
+  --board: #eef1f5;
+  --surface: #ffffff;
+  --ink: #172031;
+  --muted: #5a6577;
+  --line: #d6dce5;
+  --accent: #2446c7;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e9ff;
+  --dot: #cdd4df;
+  --n1: #ffe78f; --n2: #ffc7d8; --n3: #c2eed2; --n4: #c0ddff; --n5: #ddcdff;
+  --note-ink: #2a2618;
+  --good: #1f8a52; --warn: #b7791f; --bad: #c2413b;
+  --shadow: 0 1px 2px rgba(23,32,49,.08), 0 6px 18px -8px rgba(23,32,49,.18);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --f-note: "Kalam", "Comic Sans MS", "Segoe Print", cursive;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --board: #11151c; --surface: #1a202a; --ink: #e8ecf3; --muted: #9ba6b7; --line: #2b3340;
+  --accent: #8ea6ff; --accent-ink: #0d1430; --accent-soft: #232c4a; --dot: #222a36;
+  --n1: #e9d47e; --n2: #e6aec2; --n3: #a9d9bb; --n4: #a9c8ec; --n5: #c7b8ec;
+  --note-ink: #1d1a10; --good: #4cc488; --warn: #e0a84a; --bad: #f07a72;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 22px -10px rgba(0,0,0,.6);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --board: #11151c; --surface: #1a202a; --ink: #e8ecf3; --muted: #9ba6b7; --line: #2b3340;
+  --accent: #8ea6ff; --accent-ink: #0d1430; --accent-soft: #232c4a; --dot: #222a36;
+  --n1: #e9d47e; --n2: #e6aec2; --n3: #a9d9bb; --n4: #a9c8ec; --n5: #c7b8ec;
+  --note-ink: #1d1a10; --good: #4cc488; --warn: #e0a84a; --bad: #f07a72;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 22px -10px rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--board);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  min-height: 100vh;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1320px; margin: 0 auto; }
+
+/* Header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 10px; }
+.brand { display: flex; flex-direction: column; min-width: 0; flex: 1 1 200px; }
+.brand h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.brand small { color: var(--muted); font-size: .8rem; }
+.timer { font-family: var(--f-mono); font-weight: 700; font-size: 1.35rem; font-variant-numeric: tabular-nums; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--line); min-width: 92px; text-align: center; }
+.timer.idle { color: var(--muted); font-size: 1rem; }
+.timer.low { color: var(--warn); border-color: var(--warn); }
+.timer.over { color: var(--surface); background: var(--bad); border-color: var(--bad); animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .timer.over { animation: none; } }
+.people { display: flex; align-items: center; gap: 6px; }
+.people .av { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); margin-left: -10px; background: var(--line); object-fit: cover; }
+.people .av:first-child { margin-left: 0; }
+.people span { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+.steps { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; flex: 1 1 100%; scrollbar-width: thin; }
+.step { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 3px 11px 3px 4px; font-size: .82rem; color: var(--muted); white-space: nowrap; cursor: default; }
+.step b { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: .72rem; background: var(--board); font-variant-numeric: tabular-nums; }
+.step.past { color: var(--ink); }
+.step.past b { background: var(--good); color: var(--surface); }
+.step.now { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.step.now b { background: var(--accent-ink); color: var(--accent); }
+.step.click { cursor: pointer; }
+.step.click:hover { border-color: var(--accent); }
+
+/* Main */
+main.wrap { padding-block: 22px 140px; display: flex; flex-direction: column; gap: 22px; }
+.phase-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.phase-head h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -.015em; }
+.phase-head p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+.eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; font-weight: 700; color: var(--accent); }
+.banner { border: 1px solid var(--warn); color: var(--ink); background: var(--surface); border-radius: var(--r); padding: 10px 14px; font-size: .92rem; }
+.banner.info { border-color: var(--accent); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 13px; font-weight: 600; font-size: .9rem; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--bad); }
+.btn.sm { padding: 3px 9px; font-size: .8rem; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; font-size: .85rem; text-decoration: underline; text-underline-offset: 3px; }
+.field { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; }
+.field:focus { border-color: var(--accent); outline: none; }
+label.lbl { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+
+/* Setup */
+.methods { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px; }
+.method { text-align: left; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.method:hover { border-color: var(--accent); }
+.method.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.method h3 { font-size: 1.1rem; font-weight: 700; }
+.method p { margin: 0; font-size: .88rem; color: var(--muted); }
+.method .best { font-size: .78rem; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font-size: .75rem; padding: 2px 8px; border-radius: 4px; background: var(--c, var(--board)); color: var(--note-ink); font-weight: 600; }
+.setup-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.setup-row > div { flex: 1 1 220px; min-width: 0; }
+
+/* Board */
+.board { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 14px; align-items: start; }
+.col { background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.col > header { display: flex; gap: 8px; align-items: flex-start; border-top: 5px solid var(--note); padding-top: 8px; margin-top: -4px; }
+.col > header div { flex: 1; min-width: 0; }
+.col h3 { font-size: 1.08rem; font-weight: 700; }
+.col header p { margin: 1px 0 0; color: var(--muted); font-size: .82rem; }
+.count { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; font-variant-numeric: tabular-nums; }
+.notes { display: flex; flex-direction: column; gap: 9px; }
+.note { background: var(--note); color: var(--note-ink); border-radius: 3px 3px 12px 3px; padding: 10px 12px 8px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.note .txt { font-family: var(--f-note); font-size: 1.06rem; line-height: 1.35; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.note.mine { outline: 1.5px dashed color-mix(in srgb, var(--note-ink) 45%, transparent); outline-offset: -5px; }
+.note.sel { box-shadow: 0 0 0 3px var(--accent), var(--shadow); }
+.note.target { cursor: pointer; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent), var(--shadow); }
+.note.hidden { min-height: 58px; justify-content: center; }
+.note.hidden .bars { display: flex; flex-direction: column; gap: 6px; filter: blur(.4px); }
+.note.hidden .bars i { display: block; height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--note-ink) 18%, transparent); }
+.note.hidden small { font-size: .75rem; opacity: .7; }
+.note footer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; justify-content: space-between; }
+.note footer .acts { display: flex; gap: 4px; flex-wrap: wrap; }
+.nbtn { background: color-mix(in srgb, var(--note-ink) 9%, transparent); color: var(--note-ink); border: 0; border-radius: 5px; padding: 2px 8px; font-size: .76rem; font-weight: 600; }
+.nbtn:hover { background: color-mix(in srgb, var(--note-ink) 18%, transparent); }
+.nbtn.strong { background: var(--note-ink); color: var(--note); }
+.child { border-top: 1px dashed color-mix(in srgb, var(--note-ink) 35%, transparent); padding-top: 6px; display: flex; gap: 6px; align-items: flex-start; }
+.child p { margin: 0; flex: 1; font-family: var(--f-note); font-size: .96rem; line-height: 1.3; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.tag { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; opacity: .65; }
+.votes { display: flex; align-items: center; gap: 4px; }
+.votes .dots { display: flex; gap: 3px; min-width: 14px; }
+.votes .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--note-ink); }
+.vbtn { width: 26px; height: 26px; border-radius: 50%; border: 0; background: var(--note-ink); color: var(--note); font-weight: 700; font-size: 1rem; line-height: 1; display: grid; place-items: center; }
+.vbtn:disabled { opacity: .25; cursor: not-allowed; }
+.vtotal { font-family: var(--f-mono); font-weight: 700; font-size: .85rem; background: var(--note-ink); color: var(--note); border-radius: 999px; padding: 1px 8px; font-variant-numeric: tabular-nums; }
+.add { display: flex; flex-direction: column; gap: 6px; }
+.add textarea, .note textarea { resize: vertical; min-height: 64px; font-family: var(--f-note); font-size: 1rem; line-height: 1.35; }
+.note textarea { background: color-mix(in srgb, #fff 55%, var(--note)); color: var(--note-ink); border: 1px solid color-mix(in srgb, var(--note-ink) 30%, transparent); border-radius: 6px; padding: 6px 8px; width: 100%; }
+.add .hint { font-size: .74rem; color: var(--muted); }
+.statusbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.meter { display: flex; align-items: center; gap: 10px; font-size: .9rem; }
+.meter .track { width: 140px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.meter .track i { display: block; height: 100%; background: var(--good); }
+.vleft { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.vleft .dots { display: flex; gap: 4px; }
+.vleft .dots i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--accent); }
+.vleft .dots i.on { background: var(--accent); }
+
+/* Check-in */
+.weather { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr)); gap: 10px; }
+.wbtn { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r); padding: 14px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.wbtn .ico { font-size: 2.3rem; line-height: 1; }
+.wbtn .nm { font-weight: 600; font-size: .9rem; }
+.wbtn .ct { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wbtn.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.wbtn:hover { border-color: var(--accent); }
+
+/* Discussion */
+.discuss { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .discuss { grid-template-columns: 1fr; } }
+.focus { display: flex; flex-direction: column; gap: 14px; }
+.focus .note { padding: 18px 20px 14px; }
+.focus .note .txt { font-size: 1.45rem; }
+.rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rank li { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.rank li.cur { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.rank li.done { opacity: .6; }
+.rank .pos { font-family: var(--f-mono); font-size: .8rem; color: var(--muted); width: 22px; text-align: right; font-variant-numeric: tabular-nums; }
+.rank .sw { width: 10px; height: 26px; border-radius: 3px; background: var(--note); flex: none; }
+.rank .t { flex: 1; min-width: 0; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.rank .v { font-family: var(--f-mono); font-weight: 700; font-size: .85rem; font-variant-numeric: tabular-nums; }
+
+/* Actions */
+.actform { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+@media (max-width: 720px) { .actform { grid-template-columns: 1fr 1fr; } .actform > :first-child { grid-column: 1 / -1; } }
+.alist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.alist li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); flex-wrap: wrap; }
+.alist li.done .at { text-decoration: line-through; color: var(--muted); }
+.alist .at { flex: 1 1 200px; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.alist .meta { font-size: .82rem; color: var(--muted); }
+.alist input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+.empty { color: var(--muted); font-size: .92rem; padding: 14px; border: 1px dashed var(--line); border-radius: 8px; text-align: center; }
+
+/* ROTI */
+.roti { display: flex; flex-wrap: wrap; gap: 8px; }
+.rbtn { flex: 1 1 110px; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r); padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.rbtn b { font-family: var(--f-display); font-size: 1.8rem; font-weight: 800; }
+.rbtn span { font-size: .78rem; color: var(--muted); text-align: center; }
+.rbtn.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.dist { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; font-size: .88rem; }
+.dist .bar { height: 14px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.dist .bar i { display: block; height: 100%; background: var(--accent); }
+.dist .n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+.big { font-family: var(--f-display); font-size: 3rem; font-weight: 800; line-height: 1; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 18px; align-items: start; }
+
+/* Facilitator console */
+.fac { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--ink); color: var(--board); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.fac .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-block: 10px; }
+.fac .lab { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; opacity: .7; margin-right: 4px; }
+.fac .btn { background: transparent; color: var(--board); border-color: color-mix(in srgb, var(--board) 30%, transparent); }
+.fac .btn:hover { border-color: var(--board); }
+.fac .btn.primary { background: var(--board); color: var(--ink); border-color: var(--board); }
+.fac .sep { width: 1px; height: 24px; background: color-mix(in srgb, var(--board) 25%, transparent); }
+.fac .grow { flex: 1; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(86px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 8px; padding: 9px 14px; font-size: .9rem; max-width: calc(100% - 32px); }
+.loading { padding: 60px 0; text-align: center; color: var(--muted); }
+</style>
+
+<div id="app"><main class="wrap"><div class="loading">Connexion à la rétro…</div></main></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+
+const METHODS = {
+  ssc: { name: "Start · Stop · Continue", desc: "Le classique : ce qu'on commence, ce qu'on arrête, ce qu'on garde.", best: "Idéal pour une rétro courte ou une équipe qui débute",
+    cols: [["start","Commencer","Ce qu'on devrait essayer"],["stop","Arrêter","Ce qui coûte sans rien apporter"],["cont","Continuer","Ce qui marche, à garder"]] },
+  msg: { name: "Mad · Sad · Glad", desc: "On part des émotions du sprint pour faire remonter ce qui compte vraiment.", best: "Idéal après un sprint tendu",
+    cols: [["mad","Frustré","Ce qui m'a agacé ou bloqué"],["sad","Déçu","Ce qui m'a déçu ou manqué"],["glad","Content","Ce qui m'a fait plaisir"]] },
+  fourl: { name: "Les 4L", desc: "Liked, Learned, Lacked, Longed for : un tour complet du sprint.", best: "Idéal en fin de release ou de gros sprint",
+    cols: [["liked","Aimé","Ce que j'ai apprécié"],["learned","Appris","Ce que j'ai découvert"],["lacked","Manqué","Ce qui nous a fait défaut"],["longed","Souhaité","Ce que j'aimerais pour la suite"]] },
+  sailboat: { name: "Le voilier", desc: "La métaphore du bateau : ce qui nous pousse, nous retient, nous menace, et où on va.", best: "Idéal pour prendre du recul sur l'objectif",
+    cols: [["wind","Le vent","Ce qui nous fait avancer"],["anchor","Les ancres","Ce qui nous ralentit"],["rocks","Les rochers","Les risques devant nous"],["island","L'île","L'objectif qu'on vise"]] },
+  starfish: { name: "L'étoile de mer", desc: "Plus nuancé que Start/Stop/Continue, avec « plus de » et « moins de ».", best: "Idéal pour une équipe rodée qui veut affiner",
+    cols: [["start","Commencer","À essayer"],["stop","Arrêter","À abandonner"],["keep","Continuer","À garder tel quel"],["more","Plus de","À faire davantage"],["less","Moins de","À réduire"]] },
+  daki: { name: "DAKI", desc: "Drop, Add, Keep, Improve : on trie les pratiques de l'équipe.", best: "Idéal pour revoir le process",
+    cols: [["drop","Abandonner","Ce qu'on arrête"],["add","Ajouter","Ce qu'on met en place"],["keep","Garder","Ce qui marche bien"],["improve","Améliorer","Ce qui peut mieux faire"]] },
+  pigs: { name: "Les trois petits cochons", desc: "Paille, bois, brique : qu'est-ce qui est fragile, à consolider, solide ?", best: "Idéal pour parler qualité et dette technique",
+    cols: [["straw","Maison de paille","S'écroule au moindre souffle"],["wood","Maison de bois","Ça tient, mais à consolider"],["brick","Maison de brique","Solide, on peut compter dessus"]] },
+};
+
+const PHASES = [
+  { key: "checkin", label: "Météo", title: "La météo de l'équipe", hint: "Chacun choisit la météo qui résume son sprint. Les réponses restent anonymes." },
+  { key: "write", label: "Écriture", title: "Chacun écrit ses cartes", hint: "Écris autant de cartes que tu veux. Personne ne voit le contenu des autres avant le partage." },
+  { key: "reveal", label: "Partage", title: "On partage les cartes", hint: "Toutes les cartes sont visibles. Chacun présente les siennes, puis on regroupe les doublons." },
+  { key: "vote", label: "Vote", title: "On vote pour les sujets", hint: "Place tes votes sur les sujets à discuter en priorité. Tu peux en mettre plusieurs sur un même sujet." },
+  { key: "discuss", label: "Discussion", title: "On discute", hint: "Les sujets sont classés par nombre de votes. On les traite un par un et on note les actions." },
+  { key: "actions", label: "Actions", title: "Le plan d'action", hint: "Des actions concrètes, avec un responsable et une échéance." },
+  { key: "roti", label: "ROTI", title: "Retour sur le temps investi", hint: "De 1 à 5 : le temps passé dans cette rétro en valait-il la peine ?" },
+];
+
+const WEATHER = [["sun","☀️","Grand soleil"],["partly","🌤️","Éclaircies"],["cloud","☁️","Nuageux"],["rain","🌧️","Pluie"],["storm","⛈️","Orage"]];
+const ROTI = [[1,"Perte de temps"],[2,"Peu utile"],[3,"Correct"],[4,"Bon investissement"],[5,"Excellent"]];
+
+const S = {
+  status: "loading", db: null, user: null, room: null, me: null,
+  session: undefined, bid: null, subs: [],
+  cards: [], votes: {}, moods: {}, roti: {}, actions: [],
+  peers: [], profiles: {}, readOnly: false,
+  drafts: {}, editing: null, mergeSrc: null, setupMethod: "ssc", confirmReset: false,
+  pendingVotes: null, voteQueue: Promise.resolve(), voteInflight: 0,
+};
+
+const $app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const draft = (id, dflt = "") => esc(S.drafts[id] ?? dflt);
+
+/* ---------- helpers ---------- */
+let toastT;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200);
+}
+async function write(fn) {
+  try { await fn(); return true; }
+  catch (e) {
+    const code = e && e.code;
+    if (code === "invalid_argument") { S.readOnly = true; toast("Ton accès est en lecture seule : demande à l'animateur de te passer en Contributeur."); }
+    else if (code === "quota_exceeded") toast("La base de la rétro est pleine : supprime des cartes pour en ajouter.");
+    else if (code === "resource_exhausted") toast("Trop de modifications d'un coup, réessaie dans un instant.");
+    else toast("L'enregistrement a échoué. Vérifie ta connexion et réessaie.");
+    schedule(); return false;
+  }
+}
+const sess = () => S.session || null;
+const method = () => METHODS[sess()?.method] || METHODS.ssc;
+const phase = () => (sess() && typeof sess().phase === "number") ? sess().phase : -1;
+const isFac = () => !!(sess() && S.me && sess().facilitator === S.me);
+const canWrite = () => !!(S.db && S.me && !S.readOnly);
+const path = p => `boards/${S.bid}/${p}`;
+const colIndex = key => Math.max(0, method().cols.findIndex(c => c[0] === key));
+const noteVar = key => `var(--n${colIndex(key) % 5 + 1})`;
+const name = id => (S.profiles[id] && S.profiles[id].name) || "";
+
+function myVotes() { return S.pendingVotes || (S.votes[S.me] && S.votes[S.me].cards) || {}; }
+function votesUsed() { return Object.values(myVotes()).reduce((a, b) => a + (b || 0), 0); }
+function totalVotes(cid) {
+  let t = 0;
+  for (const [uid, v] of Object.entries(S.votes)) { if (uid === S.me) continue; t += (v.cards && v.cards[cid]) || 0; }
+  return t + (myVotes()[cid] || 0);
+}
+function topCards() {
+  const ids = new Set(S.cards.map(c => c.id));
+  return S.cards.filter(c => !c.parent || !ids.has(c.parent));
+}
+function childrenOf(id) { return S.cards.filter(c => c.parent === id).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); }
+function participants() {
+  const seen = new Map();
+  for (const p of S.peers) {
+    if (p.kind !== "viewer") continue;
+    const id = p.by || (p.presence && typeof p.presence.uid === "string" ? p.presence.uid : null) || ("peer:" + p.peer);
+    if (!seen.has(id)) seen.set(id, p);
+  }
+  return [...seen.entries()].map(([id, p]) => ({ id, peer: p }));
+}
+
+/* ---------- render ---------- */
+let raf = 0;
+function schedule() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); }
+
+function render() {
+  const a = document.activeElement;
+  let fid = null, ss = 0, se = 0;
+  if (a && a.id && (a.tagName === "TEXTAREA" || a.tagName === "INPUT")) { fid = a.id; try { ss = a.selectionStart; se = a.selectionEnd; } catch (_) {} }
+  $app.innerHTML = view();
+  if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { el.setSelectionRange(ss, se); } catch (_) {} } }
+  tick();
+  refreshProfiles();
+}
+
+let profKey = "";
+async function refreshProfiles() {
+  if (!S.user) return;
+  const ids = new Set(participants().map(p => p.id).filter(id => !id.startsWith("peer:")));
+  if (sess() && sess().facilitator) ids.add(sess().facilitator);
+  const list = [...ids].sort();
+  const key = list.join("|");
+  try {
+    const ps = await S.user.profiles(list);
+    const sig = list.map(id => (ps[id] && ps[id].name) + (ps[id] && ps[id].avatarUrl)).join("|");
+    if (key + sig !== profKey) { profKey = key + sig; S.profiles = { ...S.profiles, ...ps }; schedule(); }
+  } catch (_) {}
+}
+
+function view() {
+  if (S.status === "loading") return `<main class="wrap"><div class="loading">Connexion à la rétro…</div></main>`;
+  if (S.status === "nodb") return `<main class="wrap"><div class="panel"><h2>Ouvre la rétro depuis claude.ai</h2><p>Pour participer en direct, ouvre ce lien en étant connecté à ton compte claude.ai. Le tableau partagé n'est pas disponible dans cette vue.</p></div></main>`;
+  if (S.session === undefined) return `<main class="wrap"><div class="loading">Chargement du tableau…</div></main>`;
+  const ph = phase();
+  return header() + `<main class="wrap">${banners()}${ph < 0 ? setupView() : phaseView(ph)}</main>` + facBar() ;
+}
+
+function header() {
+  const s = sess(); const ph = phase();
+  const ppl = participants();
+  const avs = ppl.slice(0, 7).map(p => {
+    const pr = S.profiles[p.id];
+    return pr && pr.avatarUrl ? `<img class="av" src="${esc(pr.avatarUrl)}" alt="${esc(pr.name || "Participant")}" title="${esc(pr.name || "Participant")}">` : `<span class="av" title="Participant"></span>`;
+  }).join("");
+  const facName = s && s.facilitator ? (s.facilitator === S.me ? "toi" : (name(s.facilitator) || "un·e collègue")) : "";
+  const steps = ph < 0 ? "" : `<nav class="steps" aria-label="Étapes de la rétro">${PHASES.map((p, i) => {
+    const cls = i < ph ? "past" : i === ph ? "now" : "";
+    return `<button class="step ${cls} ${isFac() ? "click" : ""}" ${isFac() ? `data-act="goto" data-i="${i}"` : "disabled"} ${i === ph ? 'aria-current="step"' : ""}><b>${i + 1}</b>${p.label}</button>`;
+  }).join("")}</nav>`;
+  return `<header class="top"><div class="wrap">
+    <div class="brand"><h1>${esc(s && ph >= 0 ? (s.title || "Rétro") : "Rétro Live")}</h1>
+      <small>${ph >= 0 ? `${esc(method().name)} · animée par ${esc(facName)}` : "Rétrospective de sprint en direct"}${ph >= 0 && !isFac() && canWrite() ? ` · <button class="link" data-act="takeover">Prendre l'animation</button>` : ""}</small></div>
+    ${ph >= 0 ? `<div id="timer" class="timer idle" role="timer" aria-live="off">--:--</div>` : ""}
+    <div class="people">${avs}<span>${ppl.length} en ligne</span></div>
+    ${steps}
+  </div></header>`;
+}
+
+function banners() {
+  let h = "";
+  if (!S.me) h += `<div class="banner">Tu es en lecture seule : connecte-toi à claude.ai pour participer.</div>`;
+  else if (S.readOnly) h += `<div class="banner">Ton accès ne permet pas d'écrire. Demande à la personne qui a partagé la rétro de te donner le rôle Contributeur.</div>`;
+  if (S.mergeSrc) h += `<div class="banner info">Choisis la carte avec laquelle regrouper, puis touche « Regrouper ici ». <button class="link" data-act="mergecancel">Annuler</button></div>`;
+  return h;
+}
+
+function phaseHead(ph, extra = "") {
+  const p = PHASES[ph];
+  let hint = p.hint;
+  if (p.key === "vote") hint = `Tu as ${sess().votesPerPerson || 3} votes. Place-les sur les sujets à discuter en priorité. Tu peux en mettre plusieurs sur un même sujet.`;
+  return `<div class="phase-head"><div><div class="eyebrow">Étape ${ph + 1} sur ${PHASES.length} · ${p.label}</div><h2>${p.title}</h2><p>${hint}</p></div>${extra}</div>`;
+}
+
+/* Setup */
+function setupView() {
+  const m = S.setupMethod;
+  return `<div class="phase-head"><div><div class="eyebrow">Préparer la rétro</div><h2>Choisis une méthode et lance la séance</h2>
+    <p>Partage le lien de cette page à l'équipe. La personne qui lance la rétro l'anime : elle fait avancer les étapes et le minuteur pour tout le monde.</p></div></div>
+  <div class="methods">${Object.entries(METHODS).map(([k, v]) => `
+    <button class="method ${k === m ? "sel" : ""}" data-act="pick" data-m="${k}" aria-pressed="${k === m}">
+      <h3>${esc(v.name)}</h3><p>${esc(v.desc)}</p>
+      <div class="chips">${v.cols.map((c, i) => `<span class="chip" style="--c:var(--n${i % 5 + 1})">${esc(c[1])}</span>`).join("")}</div>
+      <span class="best">${esc(v.best)}</span>
+    </button>`).join("")}</div>
+  <div class="panel"><div class="setup-row">
+    <div><label class="lbl" for="setup-title">Nom de la rétro</label><input id="setup-title" class="field" value="${draft("setup-title", "Rétro du sprint")}" maxlength="80"></div>
+    <div style="flex:0 1 180px"><label class="lbl" for="setup-votes">Votes par personne</label>
+      <select id="setup-votes" class="field">${[2,3,4,5,6].map(n => `<option value="${n}" ${String(S.drafts["setup-votes"] ?? "3") === String(n) ? "selected" : ""}>${n} votes</option>`).join("")}</select></div>
+    <div style="flex:0 0 auto"><button class="btn primary" data-act="start" ${canWrite() ? "" : "disabled"}>Lancer la rétro</button></div>
+  </div></div>`;
+}
+
+function phaseView(ph) {
+  const k = PHASES[ph].key;
+  if (k === "checkin") return checkinView(ph);
+  if (k === "write" || k === "reveal" || k === "vote") return boardView(ph);
+  if (k === "discuss") return discussView(ph);
+  if (k === "actions") return actionsView(ph);
+  if (k === "roti") return rotiView(ph);
+  return "";
+}
+
+function checkinView(ph) {
+  const mine = S.moods[S.me] && S.moods[S.me].w;
+  const counts = {}; Object.values(S.moods).forEach(m => { counts[m.w] = (counts[m.w] || 0) + 1; });
+  const n = Object.keys(S.moods).length;
+  return phaseHead(ph) + `<div class="weather">${WEATHER.map(([k, ico, nm]) => `
+    <button class="wbtn ${mine === k ? "sel" : ""}" data-act="mood" data-w="${k}" aria-pressed="${mine === k}" ${canWrite() ? "" : "disabled"}>
+      <span class="ico" aria-hidden="true">${ico}</span><span class="nm">${nm}</span><span class="ct">${counts[k] || 0}</span></button>`).join("")}</div>
+    <div class="statusbar"><div class="meter">${n} réponse${n > 1 ? "s" : ""} sur ${participants().length} personne${participants().length > 1 ? "s" : ""} en ligne</div></div>`;
+}
+
+function boardView(ph) {
+  const k = PHASES[ph].key;
+  const ppl = participants();
+  const doneKey = `${S.bid}:${ph}`;
+  const doneN = S.peers.filter(p => p.kind === "viewer" && p.presence && p.presence.done === doneKey).length;
+  const meDone = S.peers.some(p => p.sameTab && p.presence && p.presence.done === doneKey);
+  let status = "";
+  if (k === "write") {
+    const total = S.cards.length, mineN = S.cards.filter(c => c.author === S.me).length;
+    status = `<div class="statusbar"><div class="meter"><span class="track"><i style="width:${ppl.length ? Math.round(doneN / ppl.length * 100) : 0}%"></i></span>${doneN} / ${ppl.length} ont terminé</div>
+      <span class="meter">${total} carte${total > 1 ? "s" : ""} au total, dont ${mineN} de toi</span>
+      <button class="btn ${meDone ? "" : "primary"}" data-act="done" data-k="${doneKey}" ${S.room ? "" : "disabled"}>${meDone ? "Je reprends l'écriture" : "J'ai terminé"}</button></div>`;
+  } else if (k === "vote") {
+    const max = sess().votesPerPerson || 3, used = votesUsed();
+    status = `<div class="statusbar"><span class="vleft">Tes votes <span class="dots">${Array.from({ length: max }, (_, i) => `<i class="${i < used ? "on" : ""}"></i>`).join("")}</span> ${max - used} restant${max - used > 1 ? "s" : ""}</span>
+      <div class="meter"><span class="track"><i style="width:${ppl.length ? Math.round(doneN / ppl.length * 100) : 0}%"></i></span>${doneN} / ${ppl.length} ont voté</div>
+      <button class="btn ${meDone ? "" : "primary"}" data-act="done" data-k="${doneKey}" ${S.room ? "" : "disabled"}>${meDone ? "Modifier mes votes" : "J'ai voté"}</button></div>`;
+  } else if (k === "reveal") {
+    status = `<div class="statusbar"><span class="meter">${S.cards.length} cartes. Pour regrouper deux cartes qui parlent de la même chose, touche « Regrouper » sur l'une puis « Regrouper ici » sur l'autre.</span></div>`;
+  }
+  return phaseHead(ph) + status + `<div class="board">${method().cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
+}
+
+function columnView([key, title, hint], i, k) {
+  const tops = topCards().filter(c => c.col === key).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const count = S.cards.filter(c => c.col === key).length;
+  let notes;
+  if (k === "write") {
+    const mine = tops.filter(c => c.author === S.me), others = S.cards.filter(c => c.col === key && c.author !== S.me);
+    notes = mine.map(c => noteView(c, k)).join("") + others.map(() => `<div class="note hidden" aria-label="Carte cachée"><div class="bars"><i style="width:88%"></i><i style="width:62%"></i></div><small>Carte d'un·e collègue</small></div>`).join("");
+  } else {
+    notes = tops.map(c => noteView(c, k)).join("");
+  }
+  const addable = (k === "write" || k === "reveal") && canWrite();
+  const id = `new-${key}`;
+  return `<section class="col" style="--note:var(--n${i % 5 + 1})">
+    <header><div><h3>${esc(title)}</h3><p>${esc(hint)}</p></div><span class="count" title="Cartes">${count}</span></header>
+    <div class="notes">${notes || (addable ? "" : `<div class="empty">Aucune carte</div>`)}</div>
+    ${addable ? `<div class="add"><textarea id="${id}" class="field" placeholder="Une idée par carte…" maxlength="500" data-add="${key}">${draft(id)}</textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="hint">Entrée pour ajouter, Maj+Entrée pour aller à la ligne</span><button class="btn sm primary" data-act="add" data-col="${key}">Ajouter</button></div></div>` : ""}
+  </section>`;
+}
+
+function noteView(c, k) {
+  const mine = c.author === S.me;
+  const kids = childrenOf(c.id);
+  const cls = ["note", mine ? "mine" : "", S.mergeSrc === c.id ? "sel" : "", S.mergeSrc && S.mergeSrc !== c.id ? "target" : ""].join(" ");
+  let body;
+  if (S.editing === c.id) {
+    const id = `edit-${c.id}`;
+    body = `<textarea id="${id}" maxlength="500" data-edit="${c.id}">${draft(id, c.text)}</textarea>
+      <footer><span></span><span class="acts"><button class="nbtn" data-act="editcancel">Annuler</button><button class="nbtn strong" data-act="editsave" data-id="${c.id}">Enregistrer</button></span></footer>`;
+    return `<article class="${cls}" style="--note:${noteVar(c.col)}">${body}</article>`;
+  }
+  const kidsH = kids.map(ch => `<div class="child"><p>${esc(ch.text)}</p>${k === "reveal" && canWrite() ? `<button class="nbtn" data-act="unmerge" data-id="${ch.id}">Détacher</button>` : ""}</div>`).join("");
+  let left = mine ? `<span class="tag">Toi</span>` : `<span></span>`;
+  let acts = "";
+  if ((k === "write" || k === "reveal") && mine && canWrite()) acts += `<button class="nbtn" data-act="edit" data-id="${c.id}">Modifier</button><button class="nbtn" data-act="del" data-id="${c.id}">Supprimer</button>`;
+  if (k === "reveal" && canWrite()) {
+    if (!S.mergeSrc) acts += `<button class="nbtn" data-act="merge" data-id="${c.id}">Regrouper</button>`;
+    else if (S.mergeSrc !== c.id) acts += `<button class="nbtn strong" data-act="mergehere" data-id="${c.id}">Regrouper ici</button>`;
+  }
+  if (k === "vote") {
+    const mv = myVotes()[c.id] || 0, max = sess().votesPerPerson || 3, left2 = max - votesUsed();
+    left = `<span class="votes"><button class="vbtn" data-act="vote" data-id="${c.id}" data-d="-1" aria-label="Retirer un vote" ${mv > 0 && canWrite() ? "" : "disabled"}>−</button>
+      <span class="dots" aria-label="${mv} vote(s)">${Array.from({ length: mv }, () => "<i></i>").join("")}</span>
+      <button class="vbtn" data-act="vote" data-id="${c.id}" data-d="1" aria-label="Ajouter un vote" ${left2 > 0 && canWrite() ? "" : "disabled"}>+</button></span>`;
+    acts = mine ? `<span class="tag">Toi</span>` : "";
+  }
+  return `<article class="${cls}" style="--note:${noteVar(c.col)}" ${S.mergeSrc && S.mergeSrc !== c.id ? `data-act="mergehere" data-id="${c.id}"` : ""}>
+    <p class="txt">${esc(c.text)}</p>${kidsH}
+    <footer>${left}<span class="acts">${acts}</span></footer></article>`;
+}
+
+function ranked() {
+  return topCards().map(c => ({ c, v: totalVotes(c.id) })).sort((a, b) => b.v - a.v || (a.c.createdAt || 0) - (b.c.createdAt || 0));
+}
+
+function discussView(ph) {
+  const list = ranked();
+  const fid = sess().focusCardId;
+  const cur = list.find(x => x.c.id === fid) || null;
+  const colName = key => (method().cols.find(c => c[0] === key) || [, ""])[1];
+  const focus = cur ? `<article class="note" style="--note:${noteVar(cur.c.col)}">
+      <span class="tag">${esc(colName(cur.c.col))}</span><p class="txt">${esc(cur.c.text)}</p>
+      ${childrenOf(cur.c.id).map(ch => `<div class="child"><p>${esc(ch.text)}</p></div>`).join("")}
+      <footer><span class="vtotal">${cur.v} vote${cur.v > 1 ? "s" : ""}</span><span></span></footer></article>`
+    : `<div class="empty">${isFac() ? "Choisis le premier sujet dans la liste, ou touche « Sujet suivant »." : "L'animateur va choisir le premier sujet."}</div>`;
+  return phaseHead(ph) + `<div class="discuss">
+    <div class="focus"><div class="eyebrow">Sujet en cours</div>${focus}
+      <div class="panel"><h3 style="font-size:1.05rem;margin-bottom:10px">Ajouter une action${cur ? " sur ce sujet" : ""}</h3>${actionForm(cur ? cur.c.id : null)}
+      <div style="margin-top:12px">${actionList(true)}</div></div></div>
+    <div><div class="eyebrow" style="margin-bottom:8px">Ordre du jour · ${list.length} sujet${list.length > 1 ? "s" : ""}</div>
+      ${list.length ? `<ol class="rank">${list.map((x, i) => `<li class="${x.c.id === fid ? "cur" : ""} ${x.c.discussed && x.c.id !== fid ? "done" : ""}" style="--note:${noteVar(x.c.col)}">
+        <span class="pos">${i + 1}</span><span class="sw"></span><span class="t">${esc(x.c.text)}${childrenOf(x.c.id).length ? ` <em style="color:var(--muted)">(+${childrenOf(x.c.id).length})</em>` : ""}</span>
+        <span class="v">${x.v}</span>${isFac() && x.c.id !== fid ? `<button class="btn sm" data-act="focus" data-id="${x.c.id}">Discuter</button>` : ""}</li>`).join("")}</ol>` : `<div class="empty">Aucune carte</div>`}
+    </div></div>`;
+}
+
+function actionForm(cardId) {
+  if (!canWrite()) return "";
+  return `<div class="actform">
+    <div><label class="lbl" for="act-text">Action</label><input id="act-text" class="field" placeholder="Ex. : mettre en place une revue de code à deux" maxlength="300" value="${draft("act-text")}"></div>
+    <div><label class="lbl" for="act-owner">Responsable</label><input id="act-owner" class="field" placeholder="Prénom" maxlength="60" value="${draft("act-owner")}"></div>
+    <div><label class="lbl" for="act-due">Échéance</label><input id="act-due" class="field" placeholder="Prochain sprint" maxlength="60" value="${draft("act-due")}"></div>
+    <button class="btn primary" data-act="addaction" ${cardId ? `data-card="${cardId}"` : ""}>Ajouter</button></div>`;
+}
+
+function actionList(compact) {
+  const list = [...S.actions].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  if (!list.length) return `<div class="empty">Pas encore d'action.</div>`;
+  return `<ul class="alist">${list.map(a => `<li class="${a.done ? "done" : ""}">
+    <input type="checkbox" id="chk-${a.id}" data-act="toggleaction" data-id="${a.id}" ${a.done ? "checked" : ""} ${canWrite() ? "" : "disabled"} aria-label="Marquer comme faite">
+    <span class="at">${esc(a.text)}</span>
+    <span class="meta">${a.owner ? esc(a.owner) : "Sans responsable"}${a.due ? " · " + esc(a.due) : ""}</span>
+    ${canWrite() && !compact ? `<button class="btn sm ghost danger" data-act="delaction" data-id="${a.id}">Supprimer</button>` : ""}</li>`).join("")}</ul>`;
+}
+
+function actionsView(ph) {
+  const top = ranked().slice(0, 5);
+  return phaseHead(ph) + `<div class="panel">${actionForm(null)}</div>
+    <div class="two"><div><div class="eyebrow" style="margin-bottom:8px">Actions · ${S.actions.length}</div>${actionList(false)}</div>
+    <div><div class="eyebrow" style="margin-bottom:8px">Rappel des sujets les plus votés</div>
+      ${top.length ? `<ol class="rank">${top.map((x, i) => `<li style="--note:${noteVar(x.c.col)}"><span class="pos">${i + 1}</span><span class="sw"></span><span class="t">${esc(x.c.text)}</span><span class="v">${x.v}</span></li>`).join("")}</ol>` : `<div class="empty">Aucun sujet</div>`}</div></div>`;
+}
+
+function rotiView(ph) {
+  const mine = S.roti[S.me] && S.roti[S.me].score;
+  const scores = Object.values(S.roti).map(r => r.score).filter(n => n >= 1 && n <= 5);
+  const n = scores.length, avg = n ? (scores.reduce((a, b) => a + b, 0) / n) : 0;
+  const counts = [0, 0, 0, 0, 0, 0]; scores.forEach(s => counts[s]++);
+  const maxC = Math.max(1, ...counts);
+  return phaseHead(ph) + `<div class="roti">${ROTI.map(([v, l]) => `<button class="rbtn ${mine === v ? "sel" : ""}" data-act="roti" data-v="${v}" aria-pressed="${mine === v}" ${canWrite() ? "" : "disabled"}><b>${v}</b><span>${l}</span></button>`).join("")}</div>
+    <div class="two"><div class="panel" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <div><div class="big">${n ? avg.toFixed(1).replace(".", ",") : "–"}</div><div style="color:var(--muted);font-size:.85rem">moyenne sur 5 · ${n} vote${n > 1 ? "s" : ""}</div></div>
+      <div class="dist" style="flex:1;min-width:200px">${[5, 4, 3, 2, 1].map(v => `<span>${v}</span><span class="bar"><i style="width:${counts[v] / maxC * 100}%"></i></span><span class="n">${counts[v]}</span>`).join("")}</div></div>
+    <div class="panel"><h3 style="font-size:1.05rem">Compte rendu</h3><p style="color:var(--muted);font-size:.9rem;margin:6px 0 12px">Copie le résumé de la rétro (météo, sujets votés, actions, ROTI) pour le coller dans Slack, Confluence ou un mail.</p>
+      <button class="btn primary" data-act="copy">Copier le compte rendu</button>
+      <textarea id="summary-fallback" class="field" style="margin-top:10px;min-height:120px" readonly hidden></textarea></div></div>`;
+}
+
+function summary() {
+  const s = sess(); const m = method();
+  const lines = [`# ${s.title || "Rétro"}`, `Méthode : ${m.name} · ${new Date(s.createdAt || Date.now()).toLocaleDateString("fr-FR")}`, ""];
+  const moods = Object.values(S.moods);
+  if (moods.length) { lines.push("## Météo"); lines.push(WEATHER.map(([k, ico, nm]) => { const c = moods.filter(x => x.w === k).length; return c ? `${ico} ${nm} : ${c}` : null; }).filter(Boolean).join(" · ")); lines.push(""); }
+  lines.push("## Sujets (par votes)");
+  ranked().forEach(x => {
+    const col = (m.cols.find(c => c[0] === x.c.col) || [, "?"])[1];
+    lines.push(`- [${col}] ${x.c.text.replace(/\n/g, " ")} (${x.v} vote${x.v > 1 ? "s" : ""})`);
+    childrenOf(x.c.id).forEach(ch => lines.push(`  - ${ch.text.replace(/\n/g, " ")}`));
+  });
+  lines.push("", "## Actions");
+  if (!S.actions.length) lines.push("- Aucune");
+  [...S.actions].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).forEach(a => lines.push(`- [${a.done ? "x" : " "}] ${a.text}${a.owner ? " — " + a.owner : ""}${a.due ? " (" + a.due + ")" : ""}`));
+  const sc = Object.values(S.roti).map(r => r.score).filter(Boolean);
+  if (sc.length) lines.push("", `## ROTI : ${(sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1).replace(".", ",")}/5 (${sc.length} votes)`);
+  return lines.join("\n");
+}
+
+function facBar() {
+  const ph = phase();
+  if (ph < 0 || !isFac()) return "";
+  const k = PHASES[ph].key;
+  const timerOn = !!sess().timerEnd;
+  return `<div class="fac" role="region" aria-label="Commandes de l'animateur"><div class="wrap">
+    <span class="lab">Animation</span>
+    <button class="btn" data-act="prev" ${ph === 0 ? "disabled" : ""}>← Précédent</button>
+    <button class="btn primary" data-act="next" ${ph === PHASES.length - 1 ? "disabled" : ""}>${ph < PHASES.length - 1 ? "Étape suivante : " + PHASES[ph + 1].label + " →" : "Dernière étape"}</button>
+    ${k === "discuss" ? `<button class="btn" data-act="nexttopic">Sujet suivant</button>` : ""}
+    <span class="sep"></span><span class="lab">Minuteur</span>
+    ${[2, 5, 10].map(m => `<button class="btn sm" data-act="timer" data-m="${m}">${m} min</button>`).join("")}
+    ${timerOn ? `<button class="btn sm" data-act="timer" data-m="1" data-add="1">+1 min</button><button class="btn sm" data-act="timerstop">Arrêter</button>` : ""}
+    <span class="grow"></span>
+    <button class="btn sm ${S.confirmReset ? "danger" : "ghost"}" data-act="reset">${S.confirmReset ? "Confirmer : nouvelle rétro" : "Nouvelle rétro"}</button>
+  </div></div>`;
+}
+
+/* ---------- timer ---------- */
+let lastBeep = 0;
+function tick() {
+  const el = document.getElementById("timer"); if (!el) return;
+  const end = sess() && sess().timerEnd;
+  if (!end) { el.textContent = "--:--"; el.className = "timer idle"; return; }
+  const ms = end - Date.now();
+  const abs = Math.abs(ms), m = Math.floor(abs / 60000), s = Math.floor((abs % 60000) / 1000);
+  const txt = `${ms < 0 ? "+" : ""}${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  if (ms <= 0) { el.textContent = "Temps écoulé " + txt; el.className = "timer over"; }
+  else { el.textContent = txt; el.className = "timer" + (ms < 30000 ? " low" : ""); }
+}
+setInterval(tick, 500);
+
+/* ---------- actions ---------- */
+async function setSession(patch) {
+  const next = { ...(sess() || {}), ...patch };
+  return write(() => S.db.doc("retro/session").set(next));
+}
+
+async function addCard(col) {
+  const id = `new-${col}`;
+  const text = (S.drafts[id] || "").trim();
+  if (!text || !canWrite()) return;
+  S.drafts[id] = ""; schedule();
+  const ok = await write(() => S.db.collection(path("cards")).add({ text, col, author: S.me, createdAt: Date.now() }));
+  if (!ok) { S.drafts[id] = text; schedule(); }
+}
+
+function goPhase(i) {
+  i = Math.max(0, Math.min(PHASES.length - 1, i));
+  S.mergeSrc = null;
+  setSession({ phase: i, timerEnd: null });
+}
+
+async function addVote(cid, d) {
+  const max = sess().votesPerPerson || 3;
+  const cur = { ...myVotes() };
+  const used = Object.values(cur).reduce((a, b) => a + b, 0);
+  if (d > 0 && used >= max) return;
+  if (d < 0 && !(cur[cid] > 0)) return;
+  cur[cid] = (cur[cid] || 0) + d;
+  if (cur[cid] <= 0) delete cur[cid];
+  S.pendingVotes = cur; schedule();
+  S.voteInflight++;
+  const ref = S.db.doc(path("votes/" + S.me));
+  S.voteQueue = S.voteQueue.then(() => write(() => ref.set({ cards: cur, at: Date.now() }))).finally(() => {
+    S.voteInflight--; if (S.voteInflight === 0) { S.pendingVotes = null; schedule(); }
+  });
+}
+
+async function nextTopic() {
+  const list = ranked();
+  const fid = sess().focusCardId;
+  if (fid) await write(() => S.db.doc(path("cards/" + fid)).update({ discussed: true }));
+  const nxt = list.find(x => x.c.id !== fid && !x.c.discussed);
+  setSession({ focusCardId: nxt ? nxt.c.id : null });
+  if (!nxt) toast("Tous les sujets ont été discutés.");
+}
+
+document.addEventListener("input", e => { const t = e.target; if (t && t.id) S.drafts[t.id] = t.value; });
+document.addEventListener("change", e => { const t = e.target; if (t && t.id === "setup-votes") S.drafts[t.id] = t.value; });
+document.addEventListener("keydown", e => {
+  const t = e.target;
+  if (e.key !== "Enter" || e.shiftKey || e.isComposing) return;
+  if (t.dataset && t.dataset.add) { e.preventDefault(); addCard(t.dataset.add); }
+  else if (t.dataset && t.dataset.edit) { e.preventDefault(); document.querySelector(`[data-act="editsave"][data-id="${t.dataset.edit}"]`)?.click(); }
+  else if (t.id === "act-text" || t.id === "act-owner" || t.id === "act-due") { e.preventDefault(); document.querySelector('[data-act="addaction"]')?.click(); }
+});
+
+document.addEventListener("click", async e => {
+  const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  if (act !== "reset" && S.confirmReset) { S.confirmReset = false; schedule(); }
+  switch (act) {
+    case "pick": S.setupMethod = el.dataset.m; schedule(); break;
+    case "start": {
+      if (!canWrite()) return;
+      const bid = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const title = (S.drafts["setup-title"] ?? "Rétro du sprint").trim() || "Rétro du sprint";
+      const vpp = parseInt(S.drafts["setup-votes"] ?? "3", 10) || 3;
+      await setSession({ boardId: bid, method: S.setupMethod, phase: 0, facilitator: S.me, title, votesPerPerson: vpp, timerEnd: null, focusCardId: null, createdAt: Date.now() });
+      break;
+    }
+    case "takeover": await setSession({ facilitator: S.me }); toast("Tu animes la rétro."); break;
+    case "goto": goPhase(+el.dataset.i); break;
+    case "prev": goPhase(phase() - 1); break;
+    case "next": goPhase(phase() + 1); break;
+    case "timer": {
+      const m = +el.dataset.m;
+      const base = el.dataset.add && sess().timerEnd ? Math.max(sess().timerEnd, Date.now()) : Date.now();
+      setSession({ timerEnd: base + m * 60000 }); break;
+    }
+    case "timerstop": setSession({ timerEnd: null }); break;
+    case "reset":
+      if (!S.confirmReset) { S.confirmReset = true; schedule(); setTimeout(() => { S.confirmReset = false; schedule(); }, 4000); }
+      else { S.confirmReset = false; setSession({ phase: -1, timerEnd: null, focusCardId: null }); }
+      break;
+    case "mood": write(() => S.db.doc(path("moods/" + S.me)).set({ w: el.dataset.w, at: Date.now() })); break;
+    case "roti": write(() => S.db.doc(path("roti/" + S.me)).set({ score: +el.dataset.v, at: Date.now() })); break;
+    case "add": addCard(el.dataset.col); break;
+    case "edit": S.editing = id; delete S.drafts["edit-" + id]; schedule(); setTimeout(() => document.getElementById("edit-" + id)?.focus(), 30); break;
+    case "editcancel": S.editing = null; schedule(); break;
+    case "editsave": {
+      const text = (S.drafts["edit-" + id] ?? (S.cards.find(c => c.id === id) || {}).text ?? "").trim();
+      S.editing = null; schedule();
+      if (text) write(() => S.db.doc(path("cards/" + id)).update({ text }));
+      break;
+    }
+    case "del": {
+      S.cards.filter(c => c.parent === id).forEach(ch => write(() => S.db.doc(path("cards/" + ch.id)).update({ parent: null })));
+      write(() => S.db.doc(path("cards/" + id)).delete()); break;
+    }
+    case "merge": S.mergeSrc = id; schedule(); break;
+    case "mergecancel": S.mergeSrc = null; schedule(); break;
+    case "mergehere": {
+      e.stopPropagation();
+      const src = S.mergeSrc; if (!src || src === id) return;
+      S.mergeSrc = null; schedule();
+      for (const ch of S.cards.filter(c => c.parent === src)) await write(() => S.db.doc(path("cards/" + ch.id)).update({ parent: id }));
+      await write(() => S.db.doc(path("cards/" + src)).update({ parent: id }));
+      break;
+    }
+    case "unmerge": write(() => S.db.doc(path("cards/" + id)).update({ parent: null })); break;
+    case "vote": addVote(id, +el.dataset.d); break;
+    case "done": if (S.room) { const cur = S.peers.find(p => p.sameTab); const on = cur && cur.presence && cur.presence.done === el.dataset.k; S.room.presence({ done: on ? null : el.dataset.k }).catch(() => {}); } break;
+    case "focus": {
+      const prev = sess().focusCardId;
+      if (prev) write(() => S.db.doc(path("cards/" + prev)).update({ discussed: true }));
+      setSession({ focusCardId: id }); break;
+    }
+    case "nexttopic": nextTopic(); break;
+    case "addaction": {
+      const text = (S.drafts["act-text"] || "").trim(); if (!text) { document.getElementById("act-text")?.focus(); return; }
+      const owner = (S.drafts["act-owner"] || "").trim(), due = (S.drafts["act-due"] || "").trim();
+      S.drafts["act-text"] = ""; S.drafts["act-owner"] = ""; S.drafts["act-due"] = ""; schedule();
+      write(() => S.db.collection(path("actions")).add({ text, owner, due, done: false, cardId: el.dataset.card || null, createdAt: Date.now(), by: S.me }));
+      break;
+    }
+    case "toggleaction": { const a = S.actions.find(x => x.id === id); if (a) write(() => S.db.doc(path("actions/" + id)).update({ done: !a.done })); break; }
+    case "delaction": write(() => S.db.doc(path("actions/" + id)).delete()); break;
+    case "copy": {
+      const txt = summary();
+      try { await navigator.clipboard.writeText(txt); toast("Compte rendu copié."); }
+      catch (_) { const ta = document.getElementById("summary-fallback"); if (ta) { ta.hidden = false; ta.value = txt; ta.select(); } toast("Sélectionne le texte ci-dessous et copie-le."); }
+      break;
+    }
+  }
+});
+
+/* ---------- data ---------- */
+function subscribeBoard(bid) {
+  S.subs.forEach(u => { try { u(); } catch (_) {} });
+  S.subs = []; S.cards = []; S.votes = {}; S.moods = {}; S.roti = {}; S.actions = [];
+  S.bid = bid; S.mergeSrc = null; S.editing = null; S.pendingVotes = null;
+  if (!bid) return;
+  const onErr = e => { if (e && e.code !== "revoked") toast("La synchronisation s'est interrompue. Recharge la page."); };
+  const listOf = q => q.docs.map(d => ({ id: d.id, ...d.data() }));
+  const mapOf = q => { const m = {}; q.docs.forEach(d => { m[d.id] = d.data(); }); return m; };
+  S.subs.push(S.db.collection(path("cards")).onSnapshot(q => { S.cards = listOf(q); schedule(); }, onErr));
+  S.subs.push(S.db.collection(path("votes")).onSnapshot(q => { S.votes = mapOf(q); schedule(); }, onErr));
+  S.subs.push(S.db.collection(path("moods")).onSnapshot(q => { S.moods = mapOf(q); schedule(); }, onErr));
+  S.subs.push(S.db.collection(path("roti")).onSnapshot(q => { S.roti = mapOf(q); schedule(); }, onErr));
+  S.subs.push(S.db.collection(path("actions")).onSnapshot(q => { S.actions = listOf(q); schedule(); }, onErr));
+}
+
+async function init() {
+  const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
+  const [db, user, room] = await Promise.all([use("db"), use("user"), use("room")]);
+  S.db = db; S.user = user; S.room = room;
+  if (!db) { S.status = "nodb"; render(); return; }
+  S.me = user ? await user.id() : null;
+  if (user && S.me) { try { const cw = await user.can("data.write"); if (cw === false) S.readOnly = true; } catch (_) {} }
+  S.status = "ready";
+  db.doc("retro/session").onSnapshot(snap => {
+    S.session = snap.exists ? snap.data() : null;
+    const bid = S.session && S.session.boardId || null;
+    if (bid !== S.bid) subscribeBoard(bid);
+    schedule();
+  }, () => toast("Impossible de suivre la séance. Recharge la page."));
+  if (room) {
+    room.onPeers(ch => { S.peers = ch.peers; schedule(); });
+    room.presence({ uid: S.me || null }).catch(() => {});
+  }
+  render();
+}
+init();
+})();
+</script>
