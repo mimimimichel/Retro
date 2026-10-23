@@ -280,7 +280,55 @@ label.lbl { display: block; font-size: .8rem; font-weight: 700; color: var(--mut
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--wall); border-radius: 999px; padding: 10px 18px; font-size: .9rem; font-weight: 600; max-width: calc(100% - 32px); box-shadow: var(--shadow-lift); }
 .loading { padding: 80px 0; text-align: center; color: var(--muted); font-weight: 600; }
 #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; width: 100%; height: 100%; }
+/* Illustrations: hand-drawn line art filled with the sticky-note palette */
+.ill { display: block; width: 100%; height: auto; overflow: visible; }
+.ill * { fill: none; }
+.ill .k { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ill .t { stroke-width: 2; stroke-opacity: .75; }
+.ill .ka { stroke: var(--accent); }
+.ill .kg { stroke: var(--good); }
+.ill .f1 { fill: var(--n1); } .ill .f2 { fill: var(--n2); } .ill .f3 { fill: var(--n3); } .ill .f4 { fill: var(--n4); } .ill .f5 { fill: var(--n5); }
+.ill .fp { fill: var(--pop); } .ill .fw { fill: var(--surface); } .ill .fk { fill: var(--ink); }
+.method .mhead { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; }
+.method .mhead > div { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.method .mhead .ill { width: 78px; flex: none; margin-top: -4px; transition: transform .2s cubic-bezier(.2, 1.6, .4, 1); }
+.method:hover .mhead .ill { transform: rotate(-6deg) scale(1.08); }
+.phase-head .pill { width: 120px; flex: none; margin-left: auto; }
+@media (max-width: 600px) { .phase-head .pill { width: 84px; } }
+
+/* AI */
+.spark { width: 15px; height: 15px; fill: var(--pop); flex: none; }
+.btn.ai { border-color: transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(120deg, var(--pop), var(--accent)) border-box; color: var(--ink); }
+.aipanel { border-radius: var(--r); padding: 18px; box-shadow: var(--shadow); border: 2px solid transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(120deg, var(--pop), var(--accent)) border-box; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.aihead { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; }
+.aihead h3 { font-size: 1.08rem; font-weight: 800; flex: 1 1 180px; display: flex; align-items: center; gap: 8px; }
+.aihead p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: .88rem; }
+.thinking { color: var(--muted); font-weight: 600; display: flex; gap: 6px; align-items: center; font-size: .92rem; }
+.thinking i { width: 8px; height: 8px; border-radius: 50%; background: var(--pop); animation: blink 1.2s infinite; }
+.thinking i:nth-child(2) { animation-delay: .2s; background: var(--accent); }
+.thinking i:nth-child(3) { animation-delay: .4s; background: var(--n3); }
+@keyframes blink { 0%, 100% { opacity: .25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+.aierr { color: var(--bad); font-size: .9rem; font-weight: 600; }
+.groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px; }
+.group { border: 2px dashed var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.group h4 { margin: 0; font-family: var(--f-display); font-size: 1rem; font-weight: 800; }
+.group ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.group li { font-family: var(--f-note); font-size: 1.15rem; line-height: 1.1; padding: 3px 9px; border-radius: 2px 2px 8px 2px; background: var(--note); color: var(--note-ink); overflow-wrap: anywhere; }
+.group .row { display: flex; gap: 6px; }
+.theme { align-self: flex-start; font-family: var(--f-body); font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; background: var(--note-ink); color: var(--note); padding: 1px 9px; border-radius: 999px; }
+.sugg { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sugg li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--accent-soft); flex-wrap: wrap; }
+.sugg li span { flex: 1 1 200px; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.report { font-size: .95rem; overflow-wrap: anywhere; }
+.report h3 { font-size: 1.35rem; font-weight: 800; margin: 2px 0 6px; }
+.report h4 { font-family: var(--f-display); font-size: 1.02rem; font-weight: 800; margin: 14px 0 4px; color: var(--accent); }
+.report ul { margin: 4px 0; padding-left: 20px; }
+.report li { margin: 2px 0; }
+.report p { margin: 4px 0; }
+.report.live::after { content: "▍"; color: var(--pop); animation: blink 1s infinite; }
+
 @media (prefers-reduced-motion: reduce) {
+  .thinking i, .report.live::after { animation: none; }
   .note.pop, .timer.over { animation: none; }
   .note, .btn, .method, .wbtn, .rbtn, .wbtn .ico { transition: none; }
 }
@@ -332,7 +380,30 @@ const S = {
   drafts: {}, editing: null, mergeSrc: null, setupMethod: "ssc", confirmReset: false,
   pendingVotes: null, voteQueue: Promise.resolve(), voteInflight: 0,
   seen: new Set(), cardsLoaded: false, lastPhase: null,
+  sample: null, meta: {},
+  ai: { groups: null, groupsBusy: false, actions: {}, actBusy: null, reportBusy: false, reportLive: "", ctl: null, err: {} },
 };
+
+/* ---------- illustrations ---------- */
+const svg = (body, cls = "") => `<svg class="ill ${cls}" viewBox="0 0 120 90" aria-hidden="true" focusable="false">${body}</svg>`;
+const ILL = {
+  ssc: svg(`<path d="M28 22l-8-4M28 42h-9M28 62l-8 4M92 22l8-4M92 42h9M92 62l8 4" class="k t"/><rect x="44" y="6" width="32" height="72" rx="11" class="fw k"/><circle cx="60" cy="23" r="8.5" class="f2 k"/><circle cx="60" cy="42" r="8.5" class="f1 k"/><circle cx="60" cy="61" r="8.5" class="f3 k"/><path d="M60 78v8M48 86h24" class="k"/>`),
+  msg: svg(`<circle cx="24" cy="46" r="17" class="f2 k"/><path d="M15 37l6 4M33 37l-6 4M17 56q7-6 14 0" class="k"/><circle cx="60" cy="46" r="17" class="f4 k"/><path d="M54 41v2M66 41v2M53 56q7-5 14 0" class="k"/><path d="M69 46q2 4 0 7" class="k t"/><circle cx="96" cy="46" r="17" class="f1 k"/><path d="M90 41v2M102 41v2M88 50q8 9 16 0" class="k"/>`),
+  fourl: svg(`<path d="M66 70q6 10 18 15" class="k"/><circle cx="60" cy="26" r="15" class="f3 k"/><circle cx="82" cy="45" r="15" class="f3 k"/><circle cx="60" cy="63" r="15" class="f3 k"/><circle cx="38" cy="45" r="15" class="f3 k"/><circle cx="60" cy="45" r="7" class="f1 k"/>`),
+  sailboat: svg(`<path d="M8 82q10-7 20 0t20 0t20 0t20 0t20 0" class="k ka"/><path d="M60 64V10" class="k"/><path d="M63 14l28 44H63z" class="fw k"/><path d="M57 22L35 58h22z" class="f1 k"/><path d="M60 10l13 5-13 5" class="fp k"/><path d="M22 64h76l-13 14H35z" class="f2 k"/>`),
+  starfish: svg(`<path d="M60 10 68.8 33.9 93 35.5 74.3 50.6 81 76 60 61 39 76 45.7 50.6 27 35.5 51.2 33.9z" class="fp k"/><circle cx="60" cy="30" r="2" class="fw"/><circle cx="74" cy="42" r="2" class="fw"/><circle cx="46" cy="42" r="2" class="fw"/><circle cx="67" cy="58" r="2" class="fw"/><circle cx="53" cy="58" r="2" class="fw"/><path d="M55 45v1M65 45v1M56 51q4 3 8 0" class="k"/>`),
+  daki: svg(`<rect x="22" y="6" width="34" height="34" rx="6" class="f2 k"/><path d="M32 16l14 14M46 16L32 30" class="k"/><rect x="64" y="6" width="34" height="34" rx="6" class="f3 k"/><path d="M81 15v16M73 23h16" class="k"/><rect x="22" y="48" width="34" height="34" rx="6" class="f1 k"/><path d="M30 65l6 6 12-12" class="k"/><rect x="64" y="48" width="34" height="34" rx="6" class="f4 k"/><path d="M81 74V57M74 64l7-7 7 7" class="k"/>`),
+  pigs: svg(`<path d="M4 84h112" class="k"/><rect x="9" y="52" width="26" height="32" class="f1 k"/><path d="M14 60v18M20 58v22M26 60v16M30 58v20" class="k t"/><path d="M6 54L22 34l16 20z" class="f1 k"/><rect x="46" y="46" width="28" height="38" class="f5 k"/><path d="M46 56h28M46 66h28M46 76h28" class="k t"/><path d="M43 48L60 26l17 22z" class="f5 k"/><rect x="84" y="40" width="30" height="44" class="f2 k"/><path d="M84 52h30M84 64h30M84 76h30M94 40v12M104 52v12M94 64v12" class="k t"/><path d="M81 42L99 18l18 24z" class="f2 k"/><rect x="95" y="68" width="10" height="16" rx="2" class="fw k"/>`),
+  checkin: svg(`<path d="M46 8v6M46 58v6M18 36h6M68 36h6M26 16l4 4M66 16l-4 4M26 56l4-4" class="k"/><circle cx="46" cy="36" r="16" class="f1 k"/><path d="M58 76h42a12 12 0 0 0-3-24 17 17 0 0 0-32 4 10 10 0 0 0-7 20z" class="fw k"/>`, "pill"),
+  write: svg(`<g transform="rotate(-6 46 44)"><rect x="16" y="14" width="56" height="58" rx="3" class="f1 k"/><path d="M27 32h34M27 44h28M27 56h18" class="k t"/></g><g transform="rotate(32 92 46)"><rect x="86" y="6" width="13" height="62" rx="2" class="fp k"/><path d="M86 16h13" class="k"/><path d="M86 68l6.5 14 6.5-14z" class="fw k"/></g>`, "pill"),
+  reveal: svg(`<rect x="12" y="24" width="40" height="40" rx="3" class="f2 k" transform="rotate(-12 32 44)"/><rect x="68" y="24" width="40" height="40" rx="3" class="f4 k" transform="rotate(11 88 44)"/><rect x="40" y="14" width="40" height="42" rx="3" class="f3 k"/><path d="M48 28h24M48 38h18" class="k t"/><path d="M60 66v8M44 70l-5 6M76 70l5 6" class="k"/>`, "pill"),
+  vote: svg(`<rect x="18" y="14" width="62" height="62" rx="3" class="f4 k" transform="rotate(-4 49 45)"/><path d="M30 32h32M30 42h22" class="k t"/><circle cx="40" cy="60" r="7" class="fp k"/><circle cx="58" cy="60" r="7" class="fp k"/><circle cx="98" cy="22" r="8" class="fp k"/><path d="M92 36l-4 6M100 38l-1 7" class="k t"/>`, "pill"),
+  discuss: svg(`<path d="M18 12h46a8 8 0 0 1 8 8v22a8 8 0 0 1-8 8H34L22 60V50h-4a8 8 0 0 1-8-8V20a8 8 0 0 1 8-8z" class="f4 k"/><path d="M22 26h36M22 36h24" class="k t"/><path d="M56 38h46a8 8 0 0 1 8 8v18a8 8 0 0 1-8 8h-6v10L84 72H56a8 8 0 0 1-8-8V46a8 8 0 0 1 8-8z" class="f2 k"/><circle cx="68" cy="55" r="3" class="fk"/><circle cx="79" cy="55" r="3" class="fk"/><circle cx="90" cy="55" r="3" class="fk"/>`, "pill"),
+  actions: svg(`<rect x="30" y="12" width="60" height="74" rx="6" class="fw k"/><rect x="46" y="6" width="28" height="12" rx="4" class="f5 k"/><path d="M40 34l5 5 9-9M40 52l5 5 9-9M40 70l5 5 9-9" class="k kg"/><path d="M62 36h18M62 54h18M62 72h12" class="k t"/>`, "pill"),
+  roti: svg(`<path d="M40 20H28a10 10 0 0 0 12 16M80 20h12a10 10 0 0 1-12 16" class="k"/><path d="M40 12h40v22a20 20 0 0 1-40 0z" class="f1 k"/><path d="M60 54v12" class="k"/><rect x="44" y="66" width="32" height="12" rx="3" class="f5 k"/><path d="M20 10l3 6 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" class="fp k t"/><path d="M100 48l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1z" class="f2 k t"/>`, "pill"),
+};
+const SPARK = `<svg class="spark" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c.6 4.2 3.8 7.4 8 8-4.2.6-7.4 3.8-8 8-.6-4.2-3.8-7.4-8-8 4.2-.6 7.4-3.8 8-8z"/></svg>`;
+const THINK = label => `<div class="thinking"><i></i><i></i><i></i> ${label}</div>`;
 
 const $app = document.getElementById("app");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -402,7 +473,7 @@ function render() {
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { el.setSelectionRange(ss, se); } catch (_) {} } }
   if (S.cardsLoaded) S.cards.forEach(c => S.seen.add(c.id));
   const ph = phase();
-  if (S.lastPhase !== null && ph !== S.lastPhase && PHASES[ph] && PHASES[ph].key === "roti") confetti();
+  if (S.lastPhase !== null && S.lastPhase >= 0 && ph !== S.lastPhase && PHASES[ph] && PHASES[ph].key === "roti") confetti();
   S.lastPhase = ph;
   tick();
   refreshProfiles();
@@ -463,7 +534,182 @@ function phaseHead(ph) {
   const p = PHASES[ph];
   let hint = p.hint;
   if (p.key === "vote") hint = `You have ${plural(sess().votesPerPerson || 3, "vote")}. Put them on the topics you most want to discuss. Stack several on one topic if it matters a lot.`;
-  return `<div class="phase-head"><span class="bignum" aria-hidden="true">${ph + 1}</span><div class="txt"><div class="eyebrow">Step ${ph + 1} of ${PHASES.length} · ${p.label}</div><h2>${p.title}</h2><p>${hint}</p></div></div>`;
+  return `<div class="phase-head"><span class="bignum" aria-hidden="true">${ph + 1}</span><div class="txt"><div class="eyebrow">Step ${ph + 1} of ${PHASES.length} · ${p.label}</div><h2>${p.title}</h2><p>${hint}</p></div>${ILL[p.key] || ""}</div>`;
+}
+
+/* ---------- AI ---------- */
+const aiOn = () => !!(S.sample && isFac() && canWrite());
+function aiErr(e) {
+  const c = e && e.code;
+  if (c === "not_granted") return "AI isn't allowed for this page. You can allow it from the page's permissions.";
+  if (c === "rate_limited") return "Too many AI requests right now. Try again in a minute.";
+  if (c === "sampling_disabled") return "AI is turned off for your account.";
+  if (c === "invalid_json") return "The AI answer came back garbled. Try again.";
+  return "The AI couldn't answer. Try again.";
+}
+const colName = key => (method().cols.find(c => c[0] === key) || [, key])[1];
+
+function retroDigest() {
+  const s = sess(), m = method();
+  const L = [`Retro: ${s.title || "Sprint retro"}`, `Format: ${m.name} (columns: ${m.cols.map(c => c[1]).join(", ")})`, `People online: ${participants().length}`];
+  const moods = Object.values(S.moods);
+  if (moods.length) L.push("Weather check-in: " + WEATHER.map(([k, , nm]) => { const n = moods.filter(x => x.w === k).length; return n ? `${nm} ×${n}` : null; }).filter(Boolean).join(", "));
+  L.push("", "Topics, ranked by votes:");
+  ranked().forEach(x => {
+    L.push(`- (${plural(x.v, "vote")}) [${colName(x.c.col)}]${x.c.theme ? " {" + x.c.theme + "}" : ""} ${x.c.text.replace(/\n/g, " ")}${x.c.discussed ? " (discussed)" : ""}`);
+    childrenOf(x.c.id).forEach(ch => L.push(`    - grouped: ${ch.text.replace(/\n/g, " ")}`));
+  });
+  L.push("", "Actions agreed:");
+  if (!S.actions.length) L.push("- none yet");
+  [...S.actions].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).forEach(a => L.push(`- ${a.text} | owner: ${a.owner || "none"} | due: ${a.due || "not set"}${a.done ? " | done" : ""}`));
+  const sc = Object.values(S.roti).map(r => r.score).filter(Boolean);
+  if (sc.length) L.push("", `ROTI: ${(sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1)}/5 from ${plural(sc.length, "vote")}`);
+  return L.join("\n").slice(0, 60000);
+}
+
+async function aiGroups() {
+  const tops = topCards();
+  if (tops.length < 3) { toast("Add a few more notes first."); return; }
+  S.ai.groupsBusy = true; S.ai.groups = null; S.ai.err.groups = null; schedule();
+  const notes = tops.map(c => ({ id: c.id, column: colName(c.col), text: [c.text, ...childrenOf(c.id).map(x => x.text)].join(" / ").slice(0, 400) }));
+  const prompt = `You are helping facilitate a sprint retrospective (format: ${method().name}). Below are the team's sticky notes as JSON.
+
+Group the notes that are about the same underlying topic: duplicates, near-duplicates, or clearly the same theme. Notes may come from different columns. Only group notes that clearly belong together and leave the rest out. Each group needs at least 2 notes and a short theme name of 2 to 4 words, written in the language of the notes.
+
+Reply with only JSON in this shape: {"groups":[{"theme":"Flaky CI","ids":["id1","id2"]}]}
+
+Notes:
+${JSON.stringify(notes)}`;
+  try {
+    const r = await S.sample.json(prompt);
+    const valid = new Set(tops.map(c => c.id)), used = new Set();
+    const groups = (r && Array.isArray(r.groups) ? r.groups : []).map(g => ({
+      theme: String((g && g.theme) || "Theme").slice(0, 40),
+      ids: (g && Array.isArray(g.ids) ? g.ids : []).map(String).filter(id => valid.has(id) && !used.has(id) && used.add(id)),
+    })).filter(g => g.ids.length >= 2);
+    S.ai.groups = groups;
+    if (!groups.length) toast("No clear duplicates found.");
+  } catch (e) { S.ai.err.groups = aiErr(e); }
+  finally { S.ai.groupsBusy = false; schedule(); }
+}
+
+async function applyGroup(i) {
+  const g = S.ai.groups && S.ai.groups[i]; if (!g) return;
+  S.ai.groups = S.ai.groups.filter((_, j) => j !== i); schedule();
+  const ids = g.ids.filter(id => S.cards.some(c => c.id === id));
+  const head = ids[0]; if (!head) return;
+  for (const id of ids.slice(1)) {
+    for (const ch of S.cards.filter(c => c.parent === id)) await write(() => S.db.doc(path("cards/" + ch.id)).update({ parent: head }));
+    await write(() => S.db.doc(path("cards/" + id)).update({ parent: head }));
+  }
+  await write(() => S.db.doc(path("cards/" + head)).update({ theme: g.theme }));
+}
+
+async function aiActions(cid) {
+  const x = ranked().find(x => x.c.id === cid); if (!x) return;
+  S.ai.actBusy = cid; S.ai.err.act = null; schedule();
+  const related = childrenOf(cid).map(ch => "- " + ch.text).join("\n");
+  const prompt = `You are helping a scrum team during their sprint retrospective. They are discussing this topic, raised in the "${colName(x.c.col)}" column${x.c.theme ? ` (theme: ${x.c.theme})` : ""}:
+"${x.c.text}"
+${related ? "Related notes:\n" + related + "\n" : ""}
+Actions the team already agreed on:
+${S.actions.map(a => "- " + a.text).join("\n") || "- none"}
+
+Suggest 3 concrete, small actions the team could commit to next sprint to address this topic. Each one is a short imperative sentence (at most 14 words), specific and easy to check at the next retro. Write in the language of the notes and don't repeat existing actions.
+
+Reply with only a JSON array of 3 strings.`;
+  try {
+    const r = await S.sample.json(prompt, { modelTier: "quick" });
+    S.ai.actions[cid] = (Array.isArray(r) ? r : []).map(s => String(s).slice(0, 200)).filter(Boolean).slice(0, 4);
+  } catch (e) { S.ai.err.act = aiErr(e); }
+  finally { S.ai.actBusy = null; schedule(); }
+}
+
+async function aiReport() {
+  if (S.ai.reportBusy) return;
+  const ctl = new AbortController();
+  S.ai.ctl = ctl; S.ai.reportBusy = true; S.ai.reportLive = ""; S.ai.err.report = null; schedule();
+  const prompt = `Write the report of a sprint retrospective from the data below, for team members who want the key points in a minute.
+
+Use Markdown with exactly these parts:
+# a one-line headline that captures the sprint
+## TL;DR (2 sentences)
+## Team mood (from the weather check-in and ROTI, 1-2 sentences)
+## Key themes (3 to 5 bullets; cluster related notes into themes and mention how many votes they got)
+## Action plan (one bullet per action with its owner and due date; flag actions with no owner)
+## Watch next sprint (1 to 3 bullets on risks or open questions nobody turned into an action)
+
+Keep it under 280 words. Use only the data given, never invent names or facts. Write in the language of the notes.
+
+Data:
+${retroDigest()}`;
+  try {
+    const { text } = await S.sample(prompt, { signal: ctl.signal, cache: false, onText: ({ text }) => { S.ai.reportLive = text; schedule(); } });
+    await write(() => S.db.doc(path("meta/report")).set({ text, at: Date.now(), by: S.me }));
+  } catch (e) { if (!e || e.code !== "cancelled") S.ai.err.report = aiErr(e); }
+  finally { S.ai.reportBusy = false; S.ai.reportLive = ""; S.ai.ctl = null; schedule(); }
+}
+
+function md(src) {
+  const out = []; let list = false;
+  const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  for (const raw of String(src || "").split("\n")) {
+    const line = raw.trimEnd();
+    const li = line.match(/^\s*[-*•]\s+(.*)/);
+    if (li) { if (!list) { out.push("<ul>"); list = true; } out.push(`<li>${inline(li[1])}</li>`); continue; }
+    if (list) { out.push("</ul>"); list = false; }
+    if (!line.trim()) continue;
+    const h = line.match(/^(#{1,4})\s+(.*)/);
+    if (h) { out.push(h[1].length === 1 ? `<h3>${inline(h[2])}</h3>` : `<h4>${inline(h[2])}</h4>`); continue; }
+    out.push(`<p>${inline(line)}</p>`);
+  }
+  if (list) out.push("</ul>");
+  return out.join("");
+}
+
+function groupsPanel() {
+  if (!aiOn()) return "";
+  const a = S.ai;
+  let body = "";
+  if (a.groupsBusy) body = THINK("Reading the notes and looking for duplicates…");
+  else if (a.err.groups) body = `<div class="aierr">${esc(a.err.groups)}</div>`;
+  else if (a.groups && a.groups.length) body = `<div class="groups">${a.groups.map((g, i) => `<div class="group"><h4>${esc(g.theme)}</h4>
+      <ul>${g.ids.map(id => { const c = S.cards.find(c => c.id === id); return c ? `<li style="--note:${noteVar(c.col)}">${esc(c.text)}</li>` : ""; }).join("")}</ul>
+      <div class="row"><button class="btn sm primary" data-act="aigroupapply" data-i="${i}">Group them</button><button class="btn sm ghost" data-act="aigroupskip" data-i="${i}">Skip</button></div></div>`).join("")}</div>`;
+  else if (a.groups) body = `<p style="margin:0;color:var(--muted)">No clear duplicates. The notes are all different topics.</p>`;
+  const many = a.groups && a.groups.length > 1 && !a.groupsBusy;
+  return `<section class="aipanel"><div class="aihead"><h3>${SPARK} AI grouping</h3>
+    ${many ? `<button class="btn sm primary" data-act="aigroupall">Group all</button>` : ""}
+    <button class="btn sm ai" data-act="aigroups" ${a.groupsBusy ? "disabled" : ""}>${SPARK}${a.groups ? "Suggest again" : "Suggest groups"}</button>
+    <p>Claude reads every note, spots duplicates and similar topics, and names each theme. You decide which groups to keep.</p></div>${body}</section>`;
+}
+
+function actionSuggest(cid) {
+  if (!aiOn() || !cid) return "";
+  const a = S.ai, list = a.actions[cid];
+  let body = "";
+  if (a.actBusy === cid) body = THINK("Thinking about concrete next steps…");
+  else if (a.err.act) body = `<div class="aierr">${esc(a.err.act)}</div>`;
+  else if (list && list.length) body = `<ul class="sugg">${list.map((t, i) => `<li><span>${esc(t)}</span><button class="btn sm" data-act="aiactuse" data-id="${cid}" data-i="${i}">Use this</button></li>`).join("")}</ul>`;
+  return `<div class="aihead" style="margin-top:4px"><h3 style="font-size:.95rem">${SPARK} Need ideas?</h3><button class="btn sm ai" data-act="aiact" data-id="${cid}" ${a.actBusy ? "disabled" : ""}>${SPARK}${list ? "More ideas" : "Suggest actions"}</button></div>${body}`;
+}
+
+function reportPanel() {
+  const a = S.ai, saved = S.meta.report;
+  const text = a.reportBusy ? a.reportLive : (saved && saved.text) || "";
+  const fac = aiOn();
+  if (!fac && !text) return "";
+  let body = "";
+  if (a.reportBusy && !text) body = THINK("Writing the report…");
+  else if (text) body = `<div class="report ${a.reportBusy ? "live" : ""}">${md(text)}</div>`;
+  else body = `<p style="margin:0;color:var(--muted)">One click turns the notes, votes, actions and mood into a short report, ready to share with the team.</p>`;
+  if (a.err.report) body += `<div class="aierr">${esc(a.err.report)}</div>`;
+  const btns = (fac ? (a.reportBusy
+      ? `<button class="btn sm" data-act="aistop">Stop</button>`
+      : `<button class="btn sm ai" data-act="aireport">${SPARK}${saved ? "Rewrite" : "Write the report"}</button>`) : "")
+    + (text && !a.reportBusy ? `<button class="btn sm" data-act="aicopyreport">Copy</button>` : "");
+  return `<section class="aipanel"><div class="aihead"><h3>${SPARK} AI retro report</h3>${btns}</div>${body}
+    <textarea id="report-fallback" class="field" style="min-height:120px" readonly hidden></textarea></section>`;
 }
 
 /* Setup */
@@ -482,7 +728,7 @@ function setupView() {
   <div class="eyebrow">1 · Choose a format</div>
   <div class="methods">${Object.entries(METHODS).map(([k, v]) => `
     <button class="method ${k === m ? "sel" : ""}" data-act="pick" data-m="${k}" aria-pressed="${k === m}">
-      <h3>${esc(v.name)}</h3><p>${esc(v.desc)}</p>
+      <div class="mhead"><div><h3>${esc(v.name)}</h3><p>${esc(v.desc)}</p></div>${ILL[k] || ""}</div>
       <div class="chips">${v.cols.map((c, i) => `<span class="chip" style="--c:var(--n${i % 5 + 1})">${esc(c[1])}</span>`).join("")}</div>
       <span class="best">${esc(v.best)}</span>
     </button>`).join("")}</div>
@@ -539,7 +785,7 @@ function boardView(ph) {
   } else if (k === "reveal") {
     status = `<div class="statusbar"><span class="meter">${plural(S.cards.length, "note")} on the wall. To group two notes about the same thing, tap “Group” on one, then “Group here” on the other.</span></div>`;
   }
-  return phaseHead(ph) + status + `<div class="board">${method().cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
+  return phaseHead(ph) + status + (k === "reveal" ? groupsPanel() : "") + `<div class="board">${method().cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
 }
 
 function columnView([key, title, hint], i, k) {
@@ -588,7 +834,7 @@ function noteView(c, k) {
     acts = mine ? `<span class="tag">You</span>` : "";
   }
   return `<article class="${cls}" style="--note:${noteVar(c.col)}" ${S.mergeSrc && S.mergeSrc !== c.id ? `data-act="mergehere" data-id="${c.id}"` : ""}>
-    <p class="txt">${esc(c.text)}</p>${kidsH}
+    ${c.theme && kids.length ? `<span class="theme">${esc(c.theme)}</span>` : ""}<p class="txt">${esc(c.text)}</p>${kidsH}
     <footer>${left}<span class="acts">${acts}</span></footer></article>`;
 }
 
@@ -602,13 +848,13 @@ function discussView(ph) {
   const cur = list.find(x => x.c.id === fid) || null;
   const colName = key => (method().cols.find(c => c[0] === key) || [, ""])[1];
   const focus = cur ? `<article class="note" style="--note:${noteVar(cur.c.col)}">
-      <span class="tag">${esc(colName(cur.c.col))}</span><p class="txt">${esc(cur.c.text)}</p>
+      <span class="tag">${esc(colName(cur.c.col))}</span>${cur.c.theme && childrenOf(cur.c.id).length ? `<span class="theme">${esc(cur.c.theme)}</span>` : ""}<p class="txt">${esc(cur.c.text)}</p>
       ${childrenOf(cur.c.id).map(ch => `<div class="child"><p>${esc(ch.text)}</p></div>`).join("")}
       <footer><span class="vtotal">${plural(cur.v, "vote")}</span><span></span></footer></article>`
     : `<div class="empty">${isFac() ? "Pick the first topic from the agenda, or tap “Next topic”." : "The facilitator will pick the first topic."}</div>`;
   return phaseHead(ph) + `<div class="discuss">
     <div class="focus"><div class="eyebrow">Now discussing</div>${focus}
-      <div class="panel"><h3 style="font-size:1.1rem;margin-bottom:12px">Add an action${cur ? " for this topic" : ""}</h3>${actionForm(cur ? cur.c.id : null)}
+      <div class="panel"><h3 style="font-size:1.1rem;margin-bottom:12px">Add an action${cur ? " for this topic" : ""}</h3>${actionForm(cur ? cur.c.id : null)}${actionSuggest(cur ? cur.c.id : null)}
       <div style="margin-top:14px">${actionList(true)}</div></div></div>
     <div><div class="eyebrow" style="margin-bottom:10px">Agenda · ${plural(list.length, "topic")}</div>
       ${list.length ? `<ol class="rank">${list.map((x, i) => `<li class="${x.c.id === fid ? "cur" : ""} ${x.c.discussed && x.c.id !== fid ? "done" : ""}" style="--note:${noteVar(x.c.col)}">
@@ -641,7 +887,7 @@ function actionsView(ph) {
   return phaseHead(ph) + `${canWrite() ? `<div class="panel">${actionForm(null)}</div>` : ""}
     <div class="two"><div><div class="eyebrow" style="margin-bottom:10px">Actions · ${S.actions.length}</div>${actionList(false)}</div>
     <div><div class="eyebrow" style="margin-bottom:10px">Top voted topics</div>
-      ${top.length ? `<ol class="rank">${top.map((x, i) => `<li style="--note:${noteVar(x.c.col)}"><span class="pos">${i + 1}</span><span class="sw"></span><span class="t">${esc(x.c.text)}</span><span class="v">${x.v}</span></li>`).join("")}</ol>` : `<div class="empty">No topics</div>`}</div></div>`;
+      ${top.length ? `<ol class="rank">${top.map((x, i) => `<li style="--note:${noteVar(x.c.col)}"><span class="pos">${i + 1}</span><span class="sw"></span><span class="t">${esc(x.c.text)}</span><span class="v">${x.v}</span></li>`).join("")}</ol>` : `<div class="empty">No topics</div>`}</div></div>${reportPanel()}`;
 }
 
 function rotiView(ph) {
@@ -656,7 +902,7 @@ function rotiView(ph) {
       <div class="dist" style="flex:1;min-width:200px">${[5, 4, 3, 2, 1].map(v => `<span>${v}</span><span class="bar"><i style="width:${counts[v] / maxC * 100}%"></i></span><span class="n">${counts[v]}</span>`).join("")}</div></div>
     <div class="panel"><h3 style="font-size:1.1rem">Retro summary</h3><p style="color:var(--muted);font-size:.9rem;margin:6px 0 14px">Copy a summary (weather, voted topics, actions, ROTI) to paste into Slack, Confluence or an email.</p>
       <button class="btn primary" data-act="copy">Copy summary</button>
-      <textarea id="summary-fallback" class="field" style="margin-top:12px;min-height:130px" readonly hidden></textarea></div></div>`;
+      <textarea id="summary-fallback" class="field" style="margin-top:12px;min-height:130px" readonly hidden></textarea></div></div>${reportPanel()}`;
 }
 
 function summary() {
@@ -851,6 +1097,24 @@ document.addEventListener("click", async e => {
       setSession({ focusCardId: id }); break;
     }
     case "nexttopic": nextTopic(); break;
+    case "aigroups": aiGroups(); break;
+    case "aigroupapply": applyGroup(+el.dataset.i); break;
+    case "aigroupskip": S.ai.groups = (S.ai.groups || []).filter((_, j) => j !== +el.dataset.i); schedule(); break;
+    case "aigroupall": { const n = (S.ai.groups || []).length; for (let i = 0; i < n; i++) await applyGroup(0); toast("Notes grouped."); break; }
+    case "aiact": aiActions(id); break;
+    case "aiactuse": {
+      const t = (S.ai.actions[id] || [])[+el.dataset.i]; if (!t) return;
+      S.drafts["act-text"] = t; S.ai.actions[id] = S.ai.actions[id].filter((_, j) => j !== +el.dataset.i); schedule();
+      setTimeout(() => document.getElementById("act-owner")?.focus(), 30); break;
+    }
+    case "aireport": aiReport(); break;
+    case "aistop": if (S.ai.ctl) S.ai.ctl.abort(); break;
+    case "aicopyreport": {
+      const txt = (S.meta.report && S.meta.report.text) || "";
+      try { await navigator.clipboard.writeText(txt); toast("Report copied."); }
+      catch (_) { const ta = document.getElementById("report-fallback"); if (ta) { ta.hidden = false; ta.value = txt; ta.select(); } toast("Select the text below and copy it."); }
+      break;
+    }
     case "addaction": {
       const text = (S.drafts["act-text"] || "").trim(); if (!text) { document.getElementById("act-text")?.focus(); return; }
       const owner = (S.drafts["act-owner"] || "").trim(), due = (S.drafts["act-due"] || "").trim();
@@ -887,12 +1151,13 @@ function subscribeBoard(bid) {
   S.subs.push(S.db.collection(path("moods")).onSnapshot(q => { S.moods = mapOf(q); schedule(); }, onErr));
   S.subs.push(S.db.collection(path("roti")).onSnapshot(q => { S.roti = mapOf(q); schedule(); }, onErr));
   S.subs.push(S.db.collection(path("actions")).onSnapshot(q => { S.actions = listOf(q); schedule(); }, onErr));
+  S.subs.push(S.db.collection(path("meta")).onSnapshot(q => { S.meta = mapOf(q); schedule(); }, onErr));
 }
 
 async function init() {
   const use = n => (window.claude && typeof window.claude.use === "function") ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
-  const [db, user, room] = await Promise.all([use("db"), use("user"), use("room")]);
-  S.db = db; S.user = user; S.room = room;
+  const [db, user, room, sample] = await Promise.all([use("db"), use("user"), use("room"), use("sample")]);
+  S.db = db; S.user = user; S.room = room; S.sample = sample;
   if (!db) { S.status = "nodb"; render(); return; }
   S.me = user ? await user.id() : null;
   if (user && S.me) { try { const cw = await user.can("data.write"); if (cw === false) S.readOnly = true; } catch (_) {} }
