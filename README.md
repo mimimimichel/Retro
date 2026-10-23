@@ -1,9 +1,9 @@
-# Rétro Live
+# Retro Live
 
-Outil d'animation de rétrospective de sprint, interactif et partagé en temps réel.
+A live, interactive sprint retrospective board.
 
-- 7 méthodes : Start·Stop·Continue, Mad·Sad·Glad, 4L, Voilier, Étoile de mer, DAKI, Trois petits cochons
-- Déroulé en 7 étapes : Météo → Écriture (cartes cachées) → Partage & regroupement → Vote → Discussion → Actions → ROTI
-- Minuteur partagé, présence en ligne, compte rendu copiable en Markdown
+- 7 formats: Start·Stop·Continue, Mad·Sad·Glad, 4 Ls, Sailboat, Starfish, DAKI, Three Little Pigs
+- 7 steps: Weather → Write (hidden notes) → Reveal & group → Dot voting → Discuss → Actions → ROTI
+- Shared timer, who's online, copyable Markdown summary
 
-`index.html` est publié comme Artifact claude.ai (capacités `db`, `room`, `user`).
+`index.html` is published as a claude.ai Artifact (capabilities `db`, `room`, `user`).
