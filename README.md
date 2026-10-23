@@ -1,7 +1,9 @@
 # Retro Live
 
-A live, interactive sprint retrospective board.
+A live, interactive sprint retrospective board, one retro per sprint.
 
+- Retro library: join the live retro, browse past sprints (stats, notes, actions, AI report), start a new one by sprint number
+- Follow-up on the previous sprint's actions at check-in
 - 7 formats: Start·Stop·Continue, Mad·Sad·Glad, 4 Ls, Sailboat, Starfish, DAKI, Three Little Pigs
 - 7 steps: Weather → Write (hidden notes) → Reveal & group → Dot voting → Discuss → Actions → ROTI
 - Shared timer, who's online, copyable Markdown summary

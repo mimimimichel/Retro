@@ -327,6 +327,38 @@ label.lbl { display: block; font-size: .8rem; font-weight: 700; color: var(--mut
 .report p { margin: 4px 0; }
 .report.live::after { content: "▍"; color: var(--pop); animation: blink 1s infinite; }
 
+/* Retro library */
+.section-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; }
+.section-h h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; letter-spacing: -.02em; }
+.section-h p { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+.retros { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 14px; }
+.rcard { background: var(--surface); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; min-width: 0; transition: transform .15s ease, box-shadow .15s ease; border: 2px solid transparent; }
+.rcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+.rcard.live { border-color: var(--good); }
+.rcard .rrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.rcard .rrow .ill { width: 70px; flex: none; }
+.rnum { font-family: var(--f-display); font-weight: 800; font-size: 2.7rem; line-height: .95; letter-spacing: -.03em; overflow-wrap: anywhere; min-width: 0; }
+.rnum small { display: block; font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--pop); font-weight: 800; margin-bottom: 4px; }
+.rcard h3 { font-size: 1.02rem; font-weight: 700; overflow-wrap: anywhere; }
+.rmeta { color: var(--muted); font-size: .84rem; }
+.rstats { display: flex; gap: 6px; flex-wrap: wrap; }
+.rstats span { font-size: .76rem; font-weight: 700; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-variant-numeric: tabular-nums; }
+.rcard .rfoot { display: flex; gap: 8px; align-items: center; margin-top: auto; flex-wrap: wrap; }
+.rcard .rfoot .grow { flex: 1; }
+.pill-live { display: inline-flex; gap: 7px; align-items: center; font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--good); }
+.pill-live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--good); animation: livePulse 1.6s infinite; }
+@keyframes livePulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+.pill-done { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.newretro { display: flex; flex-direction: column; gap: 16px; }
+.setup-row > .sprint { flex: 0 1 170px; }
+.sprint-field { position: relative; }
+.sprint-field span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--muted); pointer-events: none; }
+.sprint-field input { padding-left: 62px; font-weight: 800; font-family: var(--f-display); font-size: 1.1rem; }
+.backlink { border: 0; border-radius: 999px; padding: 5px 12px; font-weight: 700; font-size: .8rem; color: var(--band-ink); background: color-mix(in srgb, var(--band-ink) 12%, transparent); white-space: nowrap; }
+.backlink:hover { background: color-mix(in srgb, var(--band-ink) 22%, transparent); }
+.followup .alist li { box-shadow: none; border: 2px solid var(--line); }
+.banner .btn { margin-left: 8px; }
+
 /* Motion: intro splash, step curtain, staggered entrances, self-drawing illustrations */
 .intro { position: fixed; inset: 0; z-index: 70; background: var(--band); color: var(--band-ink); display: grid; place-items: center; clip-path: inset(0 0 0 0); cursor: pointer; }
 .intro.out { clip-path: inset(0 0 100% 0); transition: clip-path .75s cubic-bezier(.76, 0, .24, 1); }
@@ -385,6 +417,7 @@ main.enter .ill > *, main.enter .ill g > *, .curtain.in .ill > *, .curtain.in .i
 
 @media (prefers-reduced-motion: reduce) {
   .intro, .curtain { display: none; }
+  .pill-live::before { animation: none; }
   main.enter > *, main.enter .stg > *, main.enter .notes > .note, main.enter .bignum, main.enter .ill > *, main.enter .ill g > *, .toast:not([hidden]) { animation: none; }
   .thinking i, .report.live::after { animation: none; }
   .note.pop, .timer.over { animation: none; }
@@ -440,7 +473,7 @@ const S = {
   drafts: {}, editing: null, mergeSrc: null, setupMethod: "ssc", confirmReset: false,
   pendingVotes: null, voteQueue: Promise.resolve(), voteInflight: 0,
   seen: new Set(), cardsLoaded: false, lastPhase: null,
-  sample: null, meta: {}, holdUntil: 0, enterReq: false, enterBase: 0, entering: false, shownPh: undefined, bootAt: Date.now(),
+  sample: null, meta: {}, retros: [], retrosLoaded: false, viewPhase: null, prevActions: [], confirmDel: null, isOwner: false, holdUntil: 0, enterReq: false, enterBase: 0, entering: false, shownPh: undefined, bootAt: Date.now(),
   ai: { groups: null, groupsBusy: false, actions: {}, actBusy: null, reportBusy: false, reportLive: "", ctl: null, err: {} },
 };
 
@@ -491,8 +524,24 @@ async function write(fn) {
 }
 const sess = () => S.session || null;
 const method = () => METHODS[sess()?.method] || METHODS.ssc;
-const phase = () => (sess() && typeof sess().phase === "number") ? sess().phase : -1;
-const isFac = () => !!(sess() && S.me && sess().facilitator === S.me);
+const isDone = () => !!(sess() && sess().status === "done");
+const phase = () => {
+  const s = sess(); if (!s || !S.bid) return -1;
+  if (isDone() && S.viewPhase != null) return S.viewPhase;
+  return typeof s.phase === "number" ? Math.max(0, s.phase) : 0;
+};
+const retroName = r => { const t = r.title || "Retro", l = sprintLabel(r); return t.toLowerCase().includes(l.toLowerCase()) ? t : `${l} · ${t}`; };
+const sprintLabel = r => r && r.sprint ? `Sprint ${r.sprint}` : "Retro";
+const prevRetro = () => {
+  const cur = sess(); if (!cur) return null;
+  return S.retros.filter(r => r.id !== S.bid && (r.createdAt || 0) < (cur.createdAt || 0)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0] || null;
+};
+const nextSprint = () => {
+  const nums = S.retros.map(r => parseInt(String(r.sprint || "").replace(/\D+/g, ""), 10)).filter(n => !isNaN(n));
+  return nums.length ? String(Math.max(...nums) + 1) : "";
+};
+const liveRetros = () => S.retros.filter(r => r.status !== "done" && (r.updatedAt || r.createdAt || 0) > Date.now() - 12 * 3600e3).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+const isFac = () => !!(sess() && S.me && sess().facilitator === S.me && !isDone());
 const canWrite = () => !!(S.db && S.me && !S.readOnly);
 const path = p => `boards/${S.bid}/${p}`;
 const colIndex = key => Math.max(0, method().cols.findIndex(c => c[0] === key));
@@ -511,10 +560,12 @@ function topCards() {
   return S.cards.filter(c => !c.parent || !ids.has(c.parent));
 }
 function childrenOf(id) { return S.cards.filter(c => c.parent === id).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); }
+function hereCount(bid) { return new Set(S.peers.filter(p => p.kind === "viewer" && p.presence && p.presence.bid === bid).map(p => p.by || p.peer)).size; }
 function participants() {
   const seen = new Map();
   for (const p of S.peers) {
     if (p.kind !== "viewer") continue;
+    if (S.bid && (!p.presence || p.presence.bid !== S.bid) && !p.sameTab) continue;
     const id = p.by || (p.presence && typeof p.presence.uid === "string" ? p.presence.uid : null) || ("peer:" + p.peer);
     if (!seen.has(id)) seen.set(id, p);
   }
@@ -532,7 +583,7 @@ function schedule() {
 
 function prepEnter(root) {
   [...root.children].forEach((el, i) => el.style.setProperty("--d", i));
-  root.querySelectorAll(".methods,.weather,.roti,.rank,.alist,.board,.notes,.groups,.sugg").forEach(c => {
+  root.querySelectorAll(".retros,.methods,.weather,.roti,.rank,.alist,.board,.notes,.groups,.sugg").forEach(c => {
     if (!c.classList.contains("notes")) c.classList.add("stg");
     [...c.children].forEach((el, i) => el.style.setProperty("--s", Math.min(i, 10)));
   });
@@ -541,14 +592,14 @@ function prepEnter(root) {
 function prepIll(root) { root.querySelectorAll(".ill *").forEach(el => { if (el.tagName !== "g") el.setAttribute("pathLength", "1"); }); }
 
 let tTok = 0;
-function transition(ph) {
-  if (reduceMotion()) { S.enterReq = true; S.enterBase = 0; return; }
-  const tok = ++tTok, cur = document.getElementById("curtain"), p = PHASES[ph];
+function transition(ph, custom) {
+  if (reduceMotion()) { S.enterReq = true; S.enterBase = 0; schedule(); return; }
+  const tok = ++tTok, cur = document.getElementById("curtain"), p = custom ? null : PHASES[ph];
   const notes = [["--n1", "7%", "16%", "-12deg"], ["--n2", "84%", "12%", "9deg"], ["--n3", "12%", "74%", "6deg"], ["--n4", "80%", "70%", "-8deg"], ["--n5", "46%", "88%", "14deg"]];
-  cur.innerHTML = `${p ? `<div class="c-num">${ph + 1}</div>` : ""}${notes.map(([c, l, t, r], i) => `<span class="c-note" style="--c:var(${c});left:${l};top:${t};--r:${r};transition-delay:${i * 50}ms"></span>`).join("")}
-    <div class="c-in">${p ? `<div class="c-ill">${ILL[p.key]}</div>` : `<div class="c-ill">${ILL.reveal}</div>`}
-      <div class="c-eyebrow">${p ? `Step ${ph + 1} of ${PHASES.length}` : "Retro Live"}</div>
-      <div class="c-title">${p ? esc(p.title) : "New retro"}</div>
+  cur.innerHTML = `${p ? `<div class="c-num">${ph + 1}</div>` : custom && custom.num ? `<div class="c-num">${esc(custom.num)}</div>` : ""}${notes.map(([c, l, t, r], i) => `<span class="c-note" style="--c:var(${c});left:${l};top:${t};--r:${r};transition-delay:${i * 50}ms"></span>`).join("")}
+    <div class="c-in"><div class="c-ill">${p ? ILL[p.key] : (custom && custom.ill) || ILL.reveal}</div>
+      <div class="c-eyebrow">${p ? `Step ${ph + 1} of ${PHASES.length}` : esc((custom && custom.eyebrow) || "Retro Live")}</div>
+      <div class="c-title">${p ? esc(p.title) : esc((custom && custom.title) || "")}</div>
       ${p ? `<div class="c-prog">${PHASES.map((_, i) => `<i class="${i < ph ? "on" : i === ph ? "cur" : ""}"></i>`).join("")}</div>` : ""}</div>`;
   prepIll(cur);
   cur.hidden = false; cur.className = "curtain"; void cur.offsetWidth; cur.className = "curtain in";
@@ -612,9 +663,10 @@ async function refreshProfiles() {
 function view() {
   if (S.status === "loading") return `<main class="wrap"><div class="loading">Joining the retro…</div></main>`;
   if (S.status === "nodb") return `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s"><div class="panel"><h2>Open this retro from claude.ai</h2><p>To join live, open this link while signed in to your claude.ai account. The shared board isn't available in this view.</p></div></main>`;
-  if (S.session === undefined) return `<main class="wrap"><div class="loading">Loading the board…</div></main>`;
+  if (S.session === undefined) return `<main class="wrap"><div class="loading">Loading your retros…</div></main>`;
   const ph = phase();
-  return header() + `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s">${banners()}${ph < 0 ? setupView() : phaseView(ph)}</main>` + facBar();
+  const body = !S.bid ? homeView() : !sess() ? `<div class="loading">Opening the retro…</div>` : phaseView(ph);
+  return header() + `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s">${banners()}${body}</main>` + facBar();
 }
 
 function header() {
@@ -626,23 +678,27 @@ function header() {
     return pr && pr.avatarUrl ? `<img class="av" src="${esc(pr.avatarUrl)}" alt="${nm}" title="${nm}">` : `<span class="av" title="Teammate"></span>`;
   }).join("");
   const facName = s && s.facilitator ? (s.facilitator === S.me ? "you" : (name(s.facilitator) || "a teammate")) : "";
+  const browse = isDone();
   const steps = ph < 0 ? "" : `<nav class="steps" aria-label="Retro steps">${PHASES.map((p, i) => {
-    const cls = i < ph ? "past" : i === ph ? "now" : "";
-    return `<button class="step ${cls} ${isFac() ? "click" : ""}" ${isFac() ? `data-act="goto" data-i="${i}"` : "disabled"} ${i === ph ? 'aria-current="step"' : ""}><b>${i < ph ? "✓" : i + 1}</b>${p.label}</button>`;
+    const cls = browse ? (i === ph ? "now" : "past") : i < ph ? "past" : i === ph ? "now" : "";
+    const act = isFac() ? `data-act="goto" data-i="${i}"` : browse ? `data-act="viewgoto" data-i="${i}"` : "disabled";
+    return `<button class="step ${cls} ${isFac() || browse ? "click" : ""}" ${act} ${i === ph ? 'aria-current="step"' : ""}><b>${!browse && i < ph ? "✓" : i + 1}</b>${p.label}</button>`;
   }).join("")}</nav>`;
   return `<header class="top"><div class="wrap">
-    <div class="brand"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span><div class="brand-text"><h1>${esc(s && ph >= 0 ? (s.title || "Retro") : "Retro Live")}</h1>
-      <small>${ph >= 0 ? `${esc(method().name)} · facilitated by ${esc(facName)}` : "Live sprint retrospectives"}${ph >= 0 && !isFac() && canWrite() ? ` · <button class="link" data-act="takeover">Take over</button>` : ""}</small></div></div>
-    ${ph >= 0 ? `<div id="timer" class="timer idle" role="timer" aria-live="off">--:--</div>` : ""}
+    <div class="brand"><span class="logo" aria-hidden="true"><i></i><i></i><i></i></span><div class="brand-text"><h1>${esc(s && ph >= 0 ? retroName(s) : "Retro Live")}</h1>
+      <small>${ph >= 0 ? `${esc(method().name)} · ${isDone() ? "closed" : "facilitated by " + esc(facName)}` : "Live sprint retrospectives"}${ph >= 0 && !isDone() && !isFac() && canWrite() ? ` · <button class="link" data-act="takeover">Take over</button>` : ""}</small></div></div>
+    ${S.bid ? `<button class="backlink" data-act="home">← All retros</button>` : ""}
+    ${ph >= 0 && !isDone() ? `<div id="timer" class="timer idle" role="timer" aria-live="off">--:--</div>` : ""}
     <div class="people"><span class="avs">${avs}</span><span class="n">${ppl.length} online</span></div>
     ${steps}
-  </div>${ph >= 0 ? `<div class="tbar"><i id="tbar"></i></div>` : ""}</header>`;
+  </div>${ph >= 0 && !isDone() ? `<div class="tbar"><i id="tbar"></i></div>` : ""}</header>`;
 }
 
 function banners() {
   let h = "";
   if (!S.me) h += `<div class="banner">You're in view-only mode. Sign in to claude.ai to join in.</div>`;
   else if (S.readOnly) h += `<div class="banner">Your access doesn't allow editing. Ask whoever shared the retro to give you the Contributor role.</div>`;
+  if (S.bid && isDone()) h += `<div class="banner info">This retro is closed. Tap any step above to look back at it.${S.me && sess().facilitator === S.me ? `<button class="btn sm" data-act="reopen">Reopen</button>` : ""}</div>`;
   if (S.mergeSrc) h += `<div class="banner info">Pick the note to group it with, then tap “Group here”. <button class="link" data-act="mergecancel">Cancel</button></div>`;
   return h;
 }
@@ -668,7 +724,8 @@ const colName = key => (method().cols.find(c => c[0] === key) || [, key])[1];
 
 function retroDigest() {
   const s = sess(), m = method();
-  const L = [`Retro: ${s.title || "Sprint retro"}`, `Format: ${m.name} (columns: ${m.cols.map(c => c[1]).join(", ")})`, `People online: ${participants().length}`];
+  const pr = prevRetro();
+  const L = [`Retro: ${sprintLabel(s)} · ${s.title || "Sprint retro"}`, `Format: ${m.name} (columns: ${m.cols.map(c => c[1]).join(", ")})`, `People online: ${participants().length}`];
   const moods = Object.values(S.moods);
   if (moods.length) L.push("Weather check-in: " + WEATHER.map(([k, , nm]) => { const n = moods.filter(x => x.w === k).length; return n ? `${nm} ×${n}` : null; }).filter(Boolean).join(", "));
   L.push("", "Topics, ranked by votes:");
@@ -679,6 +736,7 @@ function retroDigest() {
   L.push("", "Actions agreed:");
   if (!S.actions.length) L.push("- none yet");
   [...S.actions].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).forEach(a => L.push(`- ${a.text} | owner: ${a.owner || "none"} | due: ${a.due || "not set"}${a.done ? " | done" : ""}`));
+  if (pr && S.prevActions.length) { L.push("", `Follow-up on ${sprintLabel(pr)} actions: ${S.prevActions.filter(a => a.done).length}/${S.prevActions.length} done`); S.prevActions.forEach(a => L.push(`- ${a.text}${a.done ? " (done)" : " (not done)"}`)); }
   const sc = Object.values(S.roti).map(r => r.score).filter(Boolean);
   if (sc.length) L.push("", `ROTI: ${(sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1)}/5 from ${plural(sc.length, "vote")}`);
   return L.join("\n").slice(0, 60000);
@@ -829,33 +887,55 @@ function reportPanel() {
     <textarea id="report-fallback" class="field" style="min-height:120px" readonly hidden></textarea></section>`;
 }
 
-/* Setup */
-function setupView() {
+/* Home: retro library + new retro */
+function retroCard(r, live) {
+  const m = METHODS[r.method] || METHODS.ssc;
+  const n = hereCount(r.id);
+  const date = new Date(r.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const st = r.stats || {};
+  const canDel = S.me && (S.isOwner || r.facilitator === S.me) && !live;
+  const stats = [st.notes != null ? plural(st.notes, "note") : null, st.actions != null ? plural(st.actions, "action") : null, st.roti ? `ROTI ${st.roti}/5` : null].filter(Boolean);
+  return `<article class="rcard ${live ? "live" : ""}">
+    <div class="rrow"><div class="rnum"><small>${live ? `<span class="pill-live">Live${n ? ` · ${n} here` : ""}</span>` : `<span class="pill-done">${r.status === "done" ? "Closed" : "Paused"} · ${date}</span>`}</small>${esc(r.sprint ? "Sprint " + r.sprint : "Retro")}</div>${ILL[r.method] || ""}</div>
+    <div><h3>${esc(r.title || "Retro")}</h3><div class="rmeta">${esc(m.name)}${live ? ` · ${date}` : ""}</div></div>
+    ${stats.length ? `<div class="rstats">${stats.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
+    <div class="rfoot"><button class="btn ${live ? "primary" : ""}" data-act="open" data-id="${r.id}">${live ? "Join →" : "Open"}</button><span class="grow"></span>
+      ${canDel ? `<button class="btn sm ghost danger" data-act="delretro" data-id="${r.id}">${S.confirmDel === r.id ? "Confirm delete" : "Delete"}</button>` : ""}</div>
+  </article>`;
+}
+
+function homeView() {
   const m = S.setupMethod;
+  const live = liveRetros(), liveIds = new Set(live.map(r => r.id));
+  const past = S.retros.filter(r => !liveIds.has(r.id)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const ns = nextSprint();
   return `<section class="hero"><div>
-      <div class="eyebrow">Sprint retrospective</div>
+      <div class="eyebrow">Sprint retrospectives</div>
       <h2>Look back.<br>Move <em>forward.</em></h2>
-      <p>Pick a format, launch the session and share this page with your team. Whoever launches facilitates: they move everyone through the steps and run the shared timer.</p>
+      <p>One retro per sprint. Join the one happening now, look back at past sprints, or start a new one and share this page with the team.</p>
     </div>
     <div class="stack" aria-hidden="true">
       <div class="note"><p class="txt">Pairing on the API saved us days</p></div>
       <div class="note"><p class="txt">Too many meetings on Thursday</p></div>
       <div class="note"><p class="txt">Ship smaller PRs!</p></div>
     </div></section>
-  <div class="eyebrow">1 · Choose a format</div>
+  ${live.length ? `<div class="section-h"><div><h2>Happening now</h2><p>Jump in, your team is waiting.</p></div></div><div class="retros">${live.map(r => retroCard(r, true)).join("")}</div>` : ""}
+  <div class="section-h"><div><h2>Start a new retro</h2><p>Whoever starts it facilitates: they move everyone through the steps and run the shared timer.</p></div></div>
+  <div class="panel"><div class="setup-row">
+    <div class="sprint"><label class="lbl" for="new-sprint">Sprint</label><div class="sprint-field"><span>Sprint</span><input id="new-sprint" class="field" value="${draft("new-sprint", ns)}" placeholder="42" maxlength="20"></div></div>
+    <div><label class="lbl" for="new-title">Retro name</label><input id="new-title" class="field" value="${draft("new-title")}" placeholder="${esc((S.drafts["new-sprint"] ?? ns) ? `Sprint ${(S.drafts["new-sprint"] ?? ns).trim()} retro` : "Sprint retro")}" maxlength="80"></div>
+    <div style="flex:0 1 160px"><label class="lbl" for="setup-votes">Votes per person</label>
+      <select id="setup-votes" class="field">${[2,3,4,5,6].map(n => `<option value="${n}" ${String(S.drafts["setup-votes"] ?? "3") === String(n) ? "selected" : ""}>${n} votes</option>`).join("")}</select></div>
+  </div></div>
+  <div class="eyebrow">Choose a format</div>
   <div class="methods">${Object.entries(METHODS).map(([k, v]) => `
     <button class="method ${k === m ? "sel" : ""}" data-act="pick" data-m="${k}" aria-pressed="${k === m}">
       <div class="mhead"><div><h3>${esc(v.name)}</h3><p>${esc(v.desc)}</p></div>${ILL[k] || ""}</div>
       <div class="chips">${v.cols.map((c, i) => `<span class="chip" style="--c:var(--n${i % 5 + 1})">${esc(c[1])}</span>`).join("")}</div>
       <span class="best">${esc(v.best)}</span>
     </button>`).join("")}</div>
-  <div class="eyebrow">2 · Launch</div>
-  <div class="panel"><div class="setup-row">
-    <div><label class="lbl" for="setup-title">Retro name</label><input id="setup-title" class="field" value="${draft("setup-title", "Sprint retro")}" maxlength="80"></div>
-    <div style="flex:0 1 180px"><label class="lbl" for="setup-votes">Votes per person</label>
-      <select id="setup-votes" class="field">${[2,3,4,5,6].map(n => `<option value="${n}" ${String(S.drafts["setup-votes"] ?? "3") === String(n) ? "selected" : ""}>${n} votes</option>`).join("")}</select></div>
-    <div style="flex:0 0 auto"><button class="btn primary big" data-act="start" ${canWrite() ? "" : "disabled"}>Start the retro →</button></div>
-  </div></div>`;
+  <div><button class="btn primary big" data-act="start" ${canWrite() ? "" : "disabled"}>Start ${esc((S.drafts["new-sprint"] ?? ns).trim() ? "Sprint " + (S.drafts["new-sprint"] ?? ns).trim() + " retro" : "the retro")} →</button></div>
+  ${past.length ? `<div class="section-h"><div><h2>Past retros</h2><p>${plural(past.length, "retro")}. Open one to look back at its notes, actions and report.</p></div></div><div class="retros">${past.map(r => retroCard(r, false)).join("")}</div>` : ""}`;
 }
 
 function phaseView(ph) {
@@ -878,7 +958,17 @@ function checkinView(ph) {
     <button class="wbtn ${mine === k ? "sel" : ""}" data-act="mood" data-w="${k}" aria-pressed="${mine === k}" ${canWrite() ? "" : "disabled"}>
       <span class="ico" aria-hidden="true">${ico}</span><span class="nm">${nm}</span>
       <span class="bar"><i style="width:${(counts[k] || 0) / max * 100}%"></i></span><span class="ct">${counts[k] || 0}</span></button>`).join("")}</div>
-    <div class="statusbar"><div class="meter"><span class="track"><i style="width:${on ? Math.min(100, Math.round(n / on * 100)) : 0}%"></i></span>${plural(n, "answer")} from ${on} online</div></div>`;
+    <div class="statusbar"><div class="meter"><span class="track"><i style="width:${on ? Math.min(100, Math.round(n / on * 100)) : 0}%"></i></span>${plural(n, "answer")} from ${on} online</div></div>${followUp()}`;
+}
+
+function followUp() {
+  const pr = prevRetro(); if (!pr || !S.prevActions.length) return "";
+  const list = [...S.prevActions].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  const done = list.filter(a => a.done).length;
+  return `<section class="panel followup"><div class="aihead"><h3>Follow-up from ${esc(sprintLabel(pr))}</h3><span class="rstats"><span>${done} / ${list.length} done</span></span>
+    <p>Before we start: did we do what we said we'd do last time?</p></div>
+    <ul class="alist">${list.map(a => `<li class="${a.done ? "done" : ""}"><input type="checkbox" id="prev-${a.id}" data-act="toggleprev" data-id="${a.id}" ${a.done ? "checked" : ""} ${canWrite() ? "" : "disabled"} aria-label="Mark as done">
+      <span class="at">${esc(a.text)}</span><span class="meta">${a.owner ? esc(a.owner) : "No owner"}${a.due ? " · " + esc(a.due) : ""}</span></li>`).join("")}</ul></section>`;
 }
 
 function boardView(ph) {
@@ -1024,7 +1114,7 @@ function rotiView(ph) {
 
 function summary() {
   const s = sess(); const m = method();
-  const lines = [`# ${s.title || "Retro"}`, `Format: ${m.name} · ${new Date(s.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`, ""];
+  const lines = [`# ${sprintLabel(s)} · ${s.title || "Retro"}`, `Format: ${m.name} · ${new Date(s.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`, ""];
   const moods = Object.values(S.moods);
   if (moods.length) { lines.push("## Weather"); lines.push(WEATHER.map(([k, ico, nm]) => { const c = moods.filter(x => x.w === k).length; return c ? `${ico} ${nm}: ${c}` : null; }).filter(Boolean).join(" · ")); lines.push(""); }
   lines.push("## Topics (by votes)");
@@ -1055,7 +1145,7 @@ function facBar() {
     ${[2, 5, 10].map(m => `<button class="btn sm" data-act="timer" data-m="${m}">${m} min</button>`).join("")}
     ${timerOn ? `<button class="btn sm" data-act="timer" data-m="1" data-add="1">+1</button><button class="btn sm" data-act="timerstop">Stop</button>` : ""}
     <span class="grow"></span>
-    <button class="btn sm ${S.confirmReset ? "danger" : "ghost"}" data-act="reset">${S.confirmReset ? "Confirm: new retro" : "New retro"}</button>
+    <button class="btn sm ${S.confirmReset ? "danger" : "ghost"}" data-act="reset">${S.confirmReset ? "Confirm: close retro" : "Close retro"}</button>
   </div></div>`;
 }
 
@@ -1096,8 +1186,10 @@ function confetti() {
 
 /* ---------- actions ---------- */
 async function setSession(patch) {
-  const next = { ...(sess() || {}), ...patch };
-  return write(() => S.db.doc("retro/session").set(next));
+  if (!S.bid) return false;
+  const next = { ...(sess() || {}), ...patch, updatedAt: Date.now() };
+  delete next.id;
+  return write(() => S.db.doc("retros/" + S.bid).set(next));
 }
 
 async function addCard(col) {
@@ -1140,7 +1232,7 @@ async function nextTopic() {
   if (!nxt) toast("That's every topic covered.");
 }
 
-document.addEventListener("input", e => { const t = e.target; if (t && t.id) S.drafts[t.id] = t.value; });
+document.addEventListener("input", e => { const t = e.target; if (t && t.id) { S.drafts[t.id] = t.value; if (t.id === "new-sprint") schedule(); } });
 document.addEventListener("change", e => { const t = e.target; if (t && t.id === "setup-votes") S.drafts[t.id] = t.value; });
 document.addEventListener("keydown", e => {
   const t = e.target;
@@ -1154,16 +1246,31 @@ document.addEventListener("click", async e => {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   const act = el.dataset.act, id = el.dataset.id;
   if (act !== "reset" && S.confirmReset) { S.confirmReset = false; schedule(); }
+  if (act !== "delretro" && S.confirmDel) { S.confirmDel = null; schedule(); }
   switch (act) {
     case "pick": S.setupMethod = el.dataset.m; schedule(); break;
     case "start": {
       if (!canWrite()) return;
+      const sprint = (S.drafts["new-sprint"] ?? nextSprint()).trim().replace(/^sprint\s*/i, "");
+      if (!sprint) { toast("Enter the sprint number first."); document.getElementById("new-sprint")?.focus(); return; }
+      if (S.retros.some(r => String(r.sprint) === sprint && r.status !== "done")) { toast(`Sprint ${sprint} already has a retro in progress. Join it from the list.`); return; }
       const bid = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      const title = (S.drafts["setup-title"] ?? "Sprint retro").trim() || "Sprint retro";
+      const title = (S.drafts["new-title"] || "").trim() || `Sprint ${sprint} retro`;
       const vpp = parseInt(S.drafts["setup-votes"] ?? "3", 10) || 3;
-      await setSession({ boardId: bid, method: S.setupMethod, phase: 0, facilitator: S.me, title, votesPerPerson: vpp, timerEnd: null, timerDur: null, focusCardId: null, createdAt: Date.now() });
+      const data = { sprint, title, method: S.setupMethod, phase: 0, status: "live", facilitator: S.me, votesPerPerson: vpp, timerEnd: null, timerDur: null, focusCardId: null, createdAt: Date.now(), updatedAt: Date.now() };
+      const ok = await write(() => S.db.doc("retros/" + bid).set(data));
+      if (ok) { S.drafts["new-sprint"] = undefined; S.drafts["new-title"] = ""; openRetro(bid, { id: bid, ...data }); }
       break;
     }
+    case "open": openRetro(id); break;
+    case "home": openRetro(null); break;
+    case "viewgoto": S.viewPhase = +el.dataset.i; transition(S.viewPhase); break;
+    case "reopen": setSession({ status: "live" }); S.viewPhase = null; toast("Retro reopened."); break;
+    case "delretro":
+      if (S.confirmDel !== id) { S.confirmDel = id; schedule(); setTimeout(() => { if (S.confirmDel === id) { S.confirmDel = null; schedule(); } }, 4000); }
+      else { S.confirmDel = null; write(() => S.db.doc("retros/" + id).delete()).then(ok => ok && toast("Retro deleted.")); }
+      break;
+    case "toggleprev": { const pr = prevRetro(), a = S.prevActions.find(x => x.id === id); if (pr && a) write(() => S.db.doc(`boards/${pr.id}/actions/${id}`).update({ done: !a.done })); break; }
     case "takeover": await setSession({ facilitator: S.me }); toast("You're facilitating now."); break;
     case "goto": goPhase(+el.dataset.i); break;
     case "prev": goPhase(phase() - 1); break;
@@ -1179,7 +1286,12 @@ document.addEventListener("click", async e => {
     case "timerstop": setSession({ timerEnd: null, timerDur: null }); break;
     case "reset":
       if (!S.confirmReset) { S.confirmReset = true; schedule(); setTimeout(() => { S.confirmReset = false; schedule(); }, 4000); }
-      else { S.confirmReset = false; setSession({ phase: -1, timerEnd: null, timerDur: null, focusCardId: null }); }
+      else {
+        S.confirmReset = false;
+        const sc = Object.values(S.roti).map(r => r.score).filter(Boolean);
+        setSession({ status: "done", timerEnd: null, timerDur: null, closedAt: Date.now(), stats: { notes: S.cards.length, actions: S.actions.length, roti: sc.length ? +(sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1) : null } });
+        toast("Retro closed. Find it any time under All retros.");
+      }
       break;
     case "mood": write(() => S.db.doc(path("moods/" + S.me)).set({ w: el.dataset.w, at: Date.now() })); break;
     case "roti": write(() => S.db.doc(path("roti/" + S.me)).set({ score: +el.dataset.v, at: Date.now() })); break;
@@ -1251,9 +1363,21 @@ document.addEventListener("click", async e => {
 });
 
 /* ---------- data ---------- */
+function openRetro(bid, data) {
+  if (bid === S.bid) return;
+  const r = bid ? (S.retros.find(x => x.id === bid) || data || null) : null;
+  if (bid && r) transition(0, { eyebrow: sprintLabel(r), title: r.title || "Retro", num: r.sprint || "", ill: ILL[r.method] });
+  else if (!bid) transition(0, { eyebrow: "Retro Live", title: "All retros", ill: ILL.reveal });
+  subscribeBoard(bid);
+  S.session = r; S.viewPhase = null; S.lastPhase = null; S.confirmReset = false;
+  S.shownPh = phase();
+  if (S.room) S.room.presence({ bid: bid || null, done: null }).catch(() => {});
+}
+
 function subscribeBoard(bid) {
   S.subs.forEach(u => { try { u(); } catch (_) {} });
-  S.subs = []; S.cards = []; S.votes = {}; S.moods = {}; S.roti = {}; S.actions = [];
+  S.subs = []; S.cards = []; S.votes = {}; S.moods = {}; S.roti = {}; S.actions = []; S.meta = {}; S.prevActions = [];
+  S.ai = { groups: null, groupsBusy: false, actions: {}, actBusy: null, reportBusy: false, reportLive: "", ctl: null, err: {} };
   S.bid = bid; S.mergeSrc = null; S.editing = null; S.pendingVotes = null; S.seen = new Set(); S.cardsLoaded = false;
   if (!bid) return;
   const onErr = e => { if (e && e.code !== "revoked") toast("Live sync stopped. Reload the page."); };
@@ -1269,6 +1393,9 @@ function subscribeBoard(bid) {
   S.subs.push(S.db.collection(path("roti")).onSnapshot(q => { S.roti = mapOf(q); schedule(); }, onErr));
   S.subs.push(S.db.collection(path("actions")).onSnapshot(q => { S.actions = listOf(q); schedule(); }, onErr));
   S.subs.push(S.db.collection(path("meta")).onSnapshot(q => { S.meta = mapOf(q); schedule(); }, onErr));
+  const cur = S.retros.find(r => r.id === bid);
+  const pr = cur ? S.retros.filter(r => r.id !== bid && (r.createdAt || 0) < (cur.createdAt || 0)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0] : null;
+  if (pr) S.subs.push(S.db.collection(`boards/${pr.id}/actions`).onSnapshot(q => { S.prevActions = listOf(q); schedule(); }, onErr));
 }
 
 async function init() {
@@ -1279,18 +1406,26 @@ async function init() {
   S.me = user ? await user.id() : null;
   if (user && S.me) { try { const cw = await user.can("data.write"); if (cw === false) S.readOnly = true; } catch (_) {} }
   S.status = "ready";
-  db.doc("retro/session").onSnapshot(snap => {
-    S.session = snap.exists ? snap.data() : null;
-    const nph = (S.session && typeof S.session.phase === "number") ? S.session.phase : -1;
-    if (S.shownPh !== undefined && nph !== S.shownPh) transition(nph);
+  S.isOwner = user ? await user.isOwner().catch(() => false) : false;
+  db.collection("retros").onSnapshot(q => {
+    S.retros = q.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!S.retrosLoaded) {
+      S.retrosLoaded = true;
+      const live = liveRetros()[0];
+      if (live) { subscribeBoard(live.id); if (S.room) S.room.presence({ bid: live.id }).catch(() => {}); }
+    }
+    const r = S.bid ? S.retros.find(x => x.id === S.bid) : null;
+    if (S.bid && !r) {
+      if (!(S.session && S.session.createdAt > Date.now() - 10000)) { subscribeBoard(null); S.session = null; toast("That retro was deleted."); }
+    } else S.session = r || null;
+    const nph = phase();
+    if (S.bid && S.shownPh !== undefined && S.shownPh >= 0 && nph !== S.shownPh && !(isDone() && S.viewPhase != null)) transition(nph);
     S.shownPh = nph;
-    const bid = S.session && S.session.boardId || null;
-    if (bid !== S.bid) subscribeBoard(bid);
     schedule();
-  }, () => toast("Couldn't follow the session. Reload the page."));
+  }, () => toast("Couldn't load the retros. Reload the page."));
   if (room) {
     room.onPeers(ch => { S.peers = ch.peers; if (Date.now() - S.bootAt > 5000 && ch.joined.length) announce(ch.joined); schedule(); });
-    room.presence({ uid: S.me || null }).catch(() => {});
+    room.presence({ uid: S.me || null, bid: S.bid || null }).catch(() => {});
   }
   schedule();
 }
