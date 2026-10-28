@@ -435,6 +435,50 @@ body.focusmode .statusbar { box-shadow: none; background: color-mix(in srgb, var
 body.focusmode .focus-tip { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); }
 @media (max-width: 600px) { body.focusmode .focus-tip { display: none; } }
 
+/* Presentation mode: a projection view for the facilitator */
+.pres-top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--band); color: var(--band-ink); }
+.pres-top .wrap { max-width: none; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 28px; padding-block: 16px; }
+.pres-head { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pres-step { font-size: .8rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 800; color: var(--pop); }
+.pres-title { font-family: var(--f-display); font-size: clamp(1.8rem, 3.6vw, 3.2rem); font-weight: 800; letter-spacing: -.025em; line-height: 1; overflow-wrap: anywhere; }
+.pres-prog { display: flex; gap: 6px; }
+.pres-prog i { width: 30px; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--band-ink) 18%, transparent); }
+.pres-prog i.on { background: var(--pop); }
+.pres-top .grow { flex: 1; }
+.pres-top .timer { font-size: clamp(1.8rem, 3.2vw, 2.8rem); padding: 6px 22px; min-width: 170px; }
+.pres-top .timer.idle { font-size: 1.4rem; }
+.pres-online { font-size: 1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.pres-online::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--good); }
+main.pres { max-width: none; padding-bottom: 120px; gap: 26px; }
+.pres-meter { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 26px; font-weight: 700; color: var(--muted); font-size: 1.15rem; }
+.pres-meter b { font-family: var(--f-display); font-size: clamp(2.4rem, 4vw, 3.4rem); font-weight: 800; color: var(--ink); letter-spacing: -.02em; margin-right: 8px; }
+.pres-meter .track { display: inline-block; width: 220px; height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; vertical-align: middle; }
+.pres-meter .track i { display: block; height: 100%; background: var(--good); }
+.pres .weather .wbtn { cursor: default; padding: 26px 10px 20px; }
+.pres .weather .ico { font-size: 4rem; }
+.pres .weather .nm { font-size: 1.15rem; }
+.pres .weather .ct { font-size: 1.6rem; color: var(--ink); }
+.pres-discuss { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+@media (max-width: 900px) { .pres-discuss { grid-template-columns: 1fr; } }
+.pres-discuss .note { padding: 34px 32px 22px; transform: rotate(-.6deg); }
+.pres-discuss .note .txt { font-size: clamp(2.2rem, 4.2vw, 3.6rem); }
+.pres-discuss .note .child p { font-size: 1.6rem; }
+.pres-discuss .rank li { font-size: 1.1rem; padding: 12px 14px; }
+.pres-big-list .alist li { padding: 16px 18px; }
+.pres-big-list .alist .at { font-size: 1.35rem; }
+.pres-big-list .alist .meta { font-size: .95rem; }
+.pres .big { font-size: clamp(5rem, 10vw, 8rem); }
+.pres .cnote { cursor: default; }
+.pres-bar { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 25; background: var(--band); color: var(--band-ink); border-radius: 999px; padding: 8px 10px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; opacity: .3; transition: opacity .2s ease; box-shadow: 0 20px 40px -14px rgba(10, 12, 40, .6); max-width: calc(100% - 24px); }
+.pres-bar:hover, .pres-bar:focus-within { opacity: 1; }
+.pres-bar .btn { background: transparent; color: var(--band-ink); border-color: color-mix(in srgb, var(--band-ink) 25%, transparent); }
+.pres-bar .btn:hover:not(:disabled) { border-color: var(--band-ink); }
+.pres-bar .btn.primary { background: var(--pop); color: var(--pop-ink); border-color: var(--pop); box-shadow: none; }
+.pres-bar .pos { font-family: var(--f-mono); font-size: .85rem; opacity: .8; padding: 0 4px; }
+.pres-bar .kbd { font-size: .72rem; opacity: .65; padding: 0 8px; }
+.pres-bar .sep { width: 1px; height: 22px; background: color-mix(in srgb, var(--band-ink) 20%, transparent); }
+@media (max-width: 700px) { .pres-bar .kbd { display: none; } }
+
 /* Signature */
 .sig { text-align: center; padding: 6px 0 0; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
 .sig b { font-family: var(--f-display); font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
@@ -921,6 +965,7 @@ function render() {
   if (a && a.id && (a.tagName === "TEXTAREA" || a.tagName === "INPUT")) { fid = a.id; try { ss = a.selectionStart; se = a.selectionEnd; } catch (_) {} }
   $app.innerHTML = view();
   document.body.classList.toggle("focusmode", isFocus());
+  document.body.classList.toggle("presenting", !!(S.present && S.bid && sess()));
   if (enter) { const m = $app.querySelector("main"); if (m) prepEnter(m); S.holdUntil = Date.now() + S.enterBase * 1000 + 1400; }
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { el.setSelectionRange(ss, se); } catch (_) {} } }
   if (S.cardsLoaded) S.cards.forEach(c => S.seen.add(c.id));
@@ -951,6 +996,7 @@ function view() {
   if (S.status === "nodb") return `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s"><div class="panel"><h2>Open this retro from claude.ai</h2><p>To join live, open this link while signed in to your claude.ai account. The shared board isn't available in this view.</p></div></main>`;
   if (S.session === undefined) return `<main class="wrap"><div class="loading">Loading your retros…</div></main>`;
   const ph = phase();
+  if (S.present && S.bid && sess() && ph >= 0) return presentView(ph);
   const body = !S.bid ? homeView() : !sess() ? `<div class="loading">Opening the retro…</div>` : phaseView(ph);
   return header() + `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s">${banners()}${body}<footer class="sig">Retro Live · made by <b>Michael<i>Soft</i></b></footer></main>` + facBar();
 }
@@ -1342,7 +1388,7 @@ function notePositions(L) {
 }
 
 function composer(k) {
-  if (!canWrite() || (k !== "write" && k !== "reveal")) return "";
+  if (S.present || !canWrite() || (k !== "write" && k !== "reveal")) return "";
   const m = method(); if (!m.cols.some(c => c[0] === S.composeCol)) S.composeCol = m.cols[0][0];
   const cur = m.cols.find(c => c[0] === S.composeCol);
   return `<div class="composer"><div class="zchips" role="group" aria-label="Zone for the new note">${m.cols.map(([key, title], i) => `<button class="zchip ${key === S.composeCol ? "on" : ""}" style="--note:var(--n${i % 5 + 1})" data-act="compcol" data-col="${key}" aria-pressed="${key === S.composeCol}">${colIcon(key)}${esc(title)}</button>`).join("")}</div>
@@ -1353,26 +1399,27 @@ function composer(k) {
 function canvasNote(c, k, P, i) {
   const mine = c.author === S.me, tilt = ((hashN(c.id) % 7) - 3) * .6;
   const base = `left:${Math.round(P.x)}px;top:${Math.round(P.y)}px;--note:${noteVar(c.col)};--tilt:${tilt}deg;--s:${Math.min(i, 20)}`;
-  if (k === "write" && !mine) return `<div class="note cnote hidden static" style="${base}" aria-label="Hidden note"><div class="bars"><i style="width:88%"></i><i style="width:60%"></i></div><small>A teammate's note</small></div>`;
+  if (k === "write" && (!mine || S.present)) return `<div class="note cnote hidden static" style="${base}" aria-label="Hidden note"><div class="bars"><i style="width:88%"></i><i style="width:60%"></i></div><small>A teammate's note</small></div>`;
   const kids = childrenOf(c.id);
   const isNew = S.cardsLoaded && !S.seen.has(c.id);
-  const draggable = canWrite() && ((k === "write" && mine) || k === "reveal");
+  const draggable = !S.present && canWrite() && ((k === "write" && mine) || k === "reveal");
   if (S.editing === c.id) {
     const id = `edit-${c.id}`;
     return `<article class="note cnote editing static" style="${base}"><textarea id="${id}" maxlength="500" data-edit="${c.id}">${draft(id, c.text)}</textarea>
       <footer><span></span><span class="acts"><button class="nbtn" data-act="editcancel">Cancel</button><button class="nbtn strong" data-act="editsave" data-id="${c.id}">Save</button></span></footer></article>`;
   }
   let left = mine ? `<span class="tag">You</span>` : `<span></span>`, acts = "";
-  if ((k === "write" || k === "reveal") && mine && canWrite()) acts = `<button class="nbtn" data-act="edit" data-id="${c.id}" aria-label="Edit">Edit</button><button class="nbtn" data-act="del" data-id="${c.id}" aria-label="Delete">✕</button>`;
-  if (k === "vote") {
+  if (S.present) left = `<span></span>`;
+  else if ((k === "write" || k === "reveal") && mine && canWrite()) acts = `<button class="nbtn" data-act="edit" data-id="${c.id}" aria-label="Edit">Edit</button><button class="nbtn" data-act="del" data-id="${c.id}" aria-label="Delete">✕</button>`;
+  if (k === "vote" && !S.present) {
     const mv = myVotes()[c.id] || 0, rest = (sess().votesPerPerson || 3) - votesUsed();
     left = `<span class="votes"><button class="vbtn" data-act="vote" data-id="${c.id}" data-d="-1" aria-label="Remove a vote" ${mv > 0 && canWrite() ? "" : "disabled"}>−</button>
       <span class="dots" aria-label="${plural(mv, "vote")}">${Array.from({ length: mv }, () => "<i></i>").join("")}</span>
       <button class="vbtn" data-act="vote" data-id="${c.id}" data-d="1" aria-label="Add a vote" ${rest > 0 && canWrite() ? "" : "disabled"}>+</button></span>`;
     acts = "";
   }
-  const kidsH = kids.map(ch => `<div class="child"><p>${esc(ch.text)}</p>${k === "reveal" && canWrite() ? `<button class="nbtn" data-act="unmerge" data-id="${ch.id}" aria-label="Ungroup">↩</button>` : ""}</div>`).join("");
-  return `<article class="note cnote ${mine ? "mine" : ""} ${isNew ? "pop" : ""} ${draggable ? "" : "static"}" style="${base}" data-id="${c.id}" ${draggable ? 'data-drag="1"' : ""}>
+  const kidsH = kids.map(ch => `<div class="child"><p>${esc(ch.text)}</p>${k === "reveal" && canWrite() && !S.present ? `<button class="nbtn" data-act="unmerge" data-id="${ch.id}" aria-label="Ungroup">↩</button>` : ""}</div>`).join("");
+  return `<article class="note cnote ${mine && !S.present ? "mine" : ""} ${isNew ? "pop" : ""} ${draggable ? "" : "static"}" style="${base}" data-id="${c.id}" ${draggable ? 'data-drag="1"' : ""}>
     ${c.theme && kids.length ? `<span class="theme">${esc(c.theme)}</span>` : ""}<p class="txt">${esc(c.text)}</p>${kidsH}
     <footer>${left}<span class="acts">${acts}</span></footer></article>`;
 }
@@ -1387,8 +1434,8 @@ function boardScene(k) {
     const hero = L.rects.hero;
     const zones = m.cols.map(([key, title, hint], i) => { const R = L.rects[key]; if (!R) return "";
       const n = S.cards.filter(c => c.col === key).length;
-      return `<div class="zone ${S.composeCol === key && (k === "write" || k === "reveal") ? "on" : ""}" data-z="${key}" style="left:${R.x}px;top:${R.y}px;width:${R.w}px;height:${R.h}px;--note:var(--n${i % 5 + 1});--s:${i}">
-        <div class="zlabel"><span class="cicon" aria-hidden="true">${colIcon(key)}</span><div><h3>${esc(title)}</h3><p>${esc(hint)}</p></div><span class="count">${n}</span>${canWrite() && (k === "write" || k === "reveal") ? `<button class="zadd" data-act="compcol" data-col="${key}" data-focus="1" aria-label="Add a note to ${esc(title)}">+</button>` : ""}</div></div>`; }).join("");
+      return `<div class="zone ${!S.present && S.composeCol === key && (k === "write" || k === "reveal") ? "on" : ""}" data-z="${key}" style="left:${R.x}px;top:${R.y}px;width:${R.w}px;height:${R.h}px;--note:var(--n${i % 5 + 1});--s:${i}">
+        <div class="zlabel"><span class="cicon" aria-hidden="true">${colIcon(key)}</span><div><h3>${esc(title)}</h3><p>${esc(hint)}</p></div><span class="count">${n}</span>${canWrite() && !S.present && (k === "write" || k === "reveal") ? `<button class="zadd" data-act="compcol" data-col="${key}" data-focus="1" aria-label="Add a note to ${esc(title)}">+</button>` : ""}</div></div>`; }).join("");
     const notes = topCards().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map((c, i) => pos[c.id] ? canvasNote(c, k, pos[c.id], i) : "").join("");
     return composer(k) + `<div class="canvas-wrap"><div class="canvas board-canvas bg-${sc.bg}" style="width:${W}px;height:${H}px" data-w="${W}">
       ${(DECO[sc.bg] || (() => ""))()}
@@ -1538,7 +1585,73 @@ function summary() {
   return lines.join("\n");
 }
 
-const isFocus = () => !!(S.bid && sess() && !isDone() && phase() >= 0 && PHASES[phase()].key === "write");
+/* ---------- presentation mode ---------- */
+function presentView(ph) {
+  const p = PHASES[ph], k = p.key, s = sess();
+  const ppl = participants(), doneKey = `${S.bid}:${ph}`;
+  const doneN = S.peers.filter(x => x.kind === "viewer" && x.presence && x.presence.done === doneKey).length;
+  const pct = ppl.length ? Math.min(100, Math.round(doneN / ppl.length * 100)) : 0;
+  let body = "";
+  if (k === "checkin") {
+    const counts = {}; Object.values(S.moods).forEach(m => { counts[m.w] = (counts[m.w] || 0) + 1; });
+    const n = Object.keys(S.moods).length, max = Math.max(1, ...Object.values(counts));
+    body = `<div class="pres-meter"><span><b>${n}</b>${n === 1 ? "answer" : "answers"} from ${ppl.length} online</span></div>
+      <div class="weather">${WEATHER.map(([w, ico, nm]) => `<div class="wbtn"><span class="ico" aria-hidden="true">${ico}</span><span class="nm">${nm}</span><span class="bar"><i style="width:${(counts[w] || 0) / max * 100}%"></i></span><span class="ct">${counts[w] || 0}</span></div>`).join("")}</div>${followUp()}`;
+  } else if (k === "write" || k === "reveal" || k === "vote") {
+    const meter = k === "write" ? `<span><b>${doneN} / ${ppl.length}</b>done writing</span><span class="track"><i style="width:${pct}%"></i></span><span><b>${S.cards.length}</b>notes so far</span>`
+      : k === "vote" ? `<span><b>${doneN} / ${ppl.length}</b>have voted</span><span class="track"><i style="width:${pct}%"></i></span><span>${plural(s.votesPerPerson || 3, "vote")} each</span>`
+      : `<span><b>${S.cards.length}</b>notes on the wall</span>`;
+    body = `<div class="pres-meter">${meter}</div>` + boardScene(k);
+  } else if (k === "discuss") {
+    const list = ranked(), fid = s.focusCardId, cur = list.find(x => x.c.id === fid);
+    const acts = S.actions.filter(a => cur && a.cardId === cur.c.id);
+    body = `<div class="pres-discuss"><div class="focus">${cur ? `<article class="note" style="--note:${noteVar(cur.c.col)}"><span class="tag">${esc(colName(cur.c.col))}</span><p class="txt">${esc(cur.c.text)}</p>${childrenOf(cur.c.id).map(ch => `<div class="child"><p>${esc(ch.text)}</p></div>`).join("")}<footer><span class="vtotal">${plural(cur.v, "vote")}</span><span></span></footer></article>
+        ${acts.length ? `<div class="pres-big-list"><div class="eyebrow" style="margin-bottom:8px">Actions on this topic</div><ul class="alist">${acts.map(a => `<li><span class="at">${esc(a.text)}</span><span class="meta">${a.owner ? esc(a.owner) : "No owner"}</span></li>`).join("")}</ul></div>` : ""}`
+        : `<div class="empty" style="font-size:1.2rem">Pick the first topic with N, or from the agenda.</div>`}</div>
+      <div><div class="eyebrow" style="margin-bottom:10px">Agenda</div><ol class="rank">${list.slice(0, 8).map((x, i) => `<li class="${x.c.id === fid ? "cur" : ""} ${x.c.discussed && x.c.id !== fid ? "done" : ""}" style="--note:${noteVar(x.c.col)}"><span class="pos">${i + 1}</span><span class="sw"></span><span class="t">${esc(x.c.text)}</span><span class="v">${x.v}</span></li>`).join("")}</ol></div></div>`;
+  } else if (k === "actions") {
+    body = `<div class="pres-meter"><span><b>${S.actions.length}</b>${S.actions.length === 1 ? "action" : "actions"} for next sprint</span></div><div class="pres-big-list">${actionList(true)}</div>`;
+  } else {
+    const scores = Object.values(S.roti).map(r => r.score).filter(n => n >= 1 && n <= 5), n = scores.length;
+    const avg = n ? scores.reduce((a, b) => a + b, 0) / n : 0, counts = [0, 0, 0, 0, 0, 0]; scores.forEach(v => counts[v]++);
+    const maxC = Math.max(1, ...counts), rep = S.meta.report && S.meta.report.text;
+    body = `<div class="two"><div class="panel" style="display:flex;gap:30px;align-items:center;flex-wrap:wrap"><div><div class="big">${n ? avg.toFixed(1) : "–"}</div><div style="color:var(--muted);font-weight:700">out of 5 · ${plural(n, "vote")}</div></div>
+      <div class="dist" style="flex:1;min-width:240px;font-size:1.1rem">${[5, 4, 3, 2, 1].map(v => `<span>${v}</span><span class="bar"><i style="width:${counts[v] / maxC * 100}%"></i></span><span class="n">${counts[v]}</span>`).join("")}</div></div>
+      ${rep ? `<div class="aipanel"><div class="report">${md(rep)}</div></div>` : ""}</div>`;
+  }
+  const fac = isFac();
+  const bar = `<div class="pres-bar" role="region" aria-label="Presentation controls">
+    ${fac ? `<button class="btn sm" data-act="prev" ${ph === 0 ? "disabled" : ""} aria-label="Previous step">←</button><span class="pos">${ph + 1} / ${PHASES.length}</span>
+    <button class="btn sm primary" data-act="next" ${ph === PHASES.length - 1 ? "disabled" : ""}>${ph < PHASES.length - 1 ? "Next: " + PHASES[ph + 1].label + " →" : "Last step"}</button>
+    ${k === "discuss" ? `<button class="btn sm" data-act="nexttopic">Next topic</button>` : ""}<span class="sep"></span>
+    ${[2, 5, 10].map(m => `<button class="btn sm" data-act="timer" data-m="${m}">${m} min</button>`).join("")}${s.timerEnd ? `<button class="btn sm" data-act="timerstop">Stop</button>` : ""}<span class="sep"></span>` : ""}
+    <button class="btn sm" data-act="unpresent">Exit</button>${fac ? `<span class="kbd">← → steps · T timer${k === "discuss" ? " · N next topic" : ""} · Esc exit</span>` : ""}</div>`;
+  return `<div class="pres-top"><div class="wrap"><div class="pres-head"><span class="pres-step">${esc(retroName(s))} · Step ${ph + 1} of ${PHASES.length}</span><span class="pres-title">${esc(p.title)}</span>
+      <span class="pres-prog">${PHASES.map((_, i) => `<i class="${i <= ph ? "on" : ""}"></i>`).join("")}</span></div><span class="grow"></span>
+      ${!isDone() ? `<div id="timer" class="timer idle" role="timer" aria-live="off">--:--</div>` : ""}<span class="pres-online">${ppl.length} online</span></div></div>
+    <main class="wrap pres${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s">${body}</main>${bar}`;
+}
+async function startPresent() {
+  S.present = true; S.facOpen = false; schedule();
+  if (fsAvailable() && !isFull()) { try { await toggleFullscreen(); } catch (_) {} }
+}
+function stopPresent() {
+  S.present = false; schedule();
+  if (isFull()) toggleFullscreen();
+}
+document.addEventListener("keydown", e => {
+  if (!S.present || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target && e.target.closest && e.target.closest("input,textarea,select,[contenteditable]")) return;
+  if (e.key === "Escape") { stopPresent(); return; }
+  if (!isFac()) return;
+  const k = PHASES[phase()] && PHASES[phase()].key;
+  if (["ArrowRight", "PageDown"].includes(e.key) || (e.key === " " && !e.target.closest("button"))) { e.preventDefault(); if (phase() < PHASES.length - 1) goPhase(phase() + 1); }
+  else if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); if (phase() > 0) goPhase(phase() - 1); }
+  else if (e.key === "t" || e.key === "T") { e.preventDefault(); sess().timerEnd ? setSession({ timerEnd: null, timerDur: null }) : setSession({ timerEnd: Date.now() + 5 * 60000, timerDur: 5 * 60000 }); }
+  else if ((e.key === "n" || e.key === "N") && k === "discuss") { e.preventDefault(); nextTopic(); }
+});
+
+const isFocus = () => !!(!S.present && S.bid && sess() && !isDone() && phase() >= 0 && PHASES[phase()].key === "write");
 function facBar() {
   const ph = phase();
   if (ph < 0 || !isFac()) return "";
@@ -1546,10 +1659,12 @@ function facBar() {
   const timerOn = !!sess().timerEnd;
   if (isFocus() && !S.facOpen) return `<div class="fac mini" role="region" aria-label="Facilitator controls"><div class="in">
     <span class="lab">Writing</span>
+    <button class="btn sm" data-act="present">Present</button>
     <button class="btn primary sm" data-act="next">Next: ${PHASES[ph + 1].label} →</button>
     <button class="btn sm" data-act="facopen" aria-expanded="false">More</button></div></div>`;
   return `<div class="fac" role="region" aria-label="Facilitator controls"><div class="in">
     <span class="lab">Facilitate</span>
+    <button class="btn sm" data-act="present" title="Big-screen view for projecting or sharing your screen">▶ Present</button>
     <button class="btn sm" data-act="prev" ${ph === 0 ? "disabled" : ""}>← Back</button>
     <button class="btn primary" data-act="next" ${ph === PHASES.length - 1 ? "disabled" : ""}>${ph < PHASES.length - 1 ? "Next: " + PHASES[ph + 1].label + " →" : "Last step"}</button>
     ${k === "discuss" ? `<button class="btn sm" data-act="nexttopic">Next topic</button>` : ""}
@@ -1679,6 +1794,8 @@ document.addEventListener("click", async e => {
     case "compcol": S.composeCol = el.dataset.col; S.composePos = null; schedule(); if (el.dataset.focus) setTimeout(() => { const t = document.getElementById("compose"); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: "center", behavior: "smooth" }); } }, 40); break;
     case "composeadd": composeAdd(); break;
     case "fullscreen": toggleFullscreen(); break;
+    case "present": startPresent(); break;
+    case "unpresent": stopPresent(); break;
     case "facopen": S.facOpen = true; schedule(); break;
     case "facclose": S.facOpen = false; schedule(); break;
     case "focusf": {
@@ -1857,7 +1974,7 @@ document.addEventListener("pointerup", endDrag);
 document.addEventListener("pointercancel", e => { if (drag && e.pointerId === drag.pid) { drag = null; S.holdUntil = 0; schedule(); } });
 document.addEventListener("dblclick", e => {
   const canvas = e.target.closest(".canvas"); if (!canvas || e.target.closest(".cnote,button,textarea")) return;
-  const k = phase() >= 0 ? PHASES[phase()].key : ""; if (!canWrite() || (k !== "write" && k !== "reveal")) return;
+  const k = phase() >= 0 ? PHASES[phase()].key : ""; if (S.present || !canWrite() || (k !== "write" && k !== "reveal")) return;
   const cr = canvas.getBoundingClientRect(), W = +canvas.dataset.w || canvasW();
   const x = Math.max(0, Math.min(W - NOTE_W, e.clientX - cr.left - NOTE_W / 2)), y = Math.max(0, e.clientY - cr.top - 20);
   S.composeCol = zoneAt(sceneLayout(sess().method, W), x + NOTE_W / 2, y + 30);
@@ -1874,7 +1991,7 @@ function openRetro(bid, data) {
   if (bid && r) transition(0, { eyebrow: sprintLabel(r), title: r.title || "Retro", num: r.sprint || "", ill: ILL[r.method] });
   else if (!bid) transition(0, { eyebrow: "Retro Live", title: "All retros", ill: ILL.reveal });
   subscribeBoard(bid);
-  S.session = r; S.viewPhase = null; S.lastPhase = null; S.confirmReset = false;
+  S.session = r; S.viewPhase = null; S.lastPhase = null; S.confirmReset = false; S.present = false;
   S.shownPh = phase();
   if (S.room) S.room.presence({ bid: bid || null, done: null }).catch(() => {});
 }
