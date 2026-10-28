@@ -34,6 +34,8 @@
   --note-ink: #26222f;
   --tape: rgba(255,255,255,.55);
   --good: #17a45b; --warn: #e08a00; --bad: #e0344f;
+  --sky: #d7e8ff; --sea: #a9d8ea; --sand: #f5e3b5; --grass: #c4e8b5; --road: #d3d7e4;
+  --night1: #efe7ff; --night2: #d6c8ff; --warm1: #ffe4ec; --warm2: #fff0d4; --gridline: rgba(75, 79, 240, .11);
   --shadow: 0 1px 2px rgba(27,31,69,.10), 0 10px 20px -10px rgba(27,31,69,.35);
   --shadow-lift: 0 2px 4px rgba(27,31,69,.12), 0 18px 30px -12px rgba(27,31,69,.45);
   --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
@@ -49,6 +51,8 @@
   --n1: #f2d95f; --n2: #f2a3c0; --n3: #98dcb4; --n4: #9cc6f2; --n5: #c2b0f2;
   --note-ink: #1f1b28; --tape: rgba(255,255,255,.35);
   --good: #4fd18a; --warn: #ffb547; --bad: #ff6b80;
+  --sky: #1c2a56; --sea: #123a52; --sand: #3b3321; --grass: #1d3b28; --road: #2a2e45;
+  --night1: #30276a; --night2: #15112f; --warm1: #3a2032; --warm2: #352f1d; --gridline: rgba(140, 143, 255, .13);
   --shadow: 0 1px 2px rgba(0,0,0,.45), 0 12px 24px -12px rgba(0,0,0,.75);
   --shadow-lift: 0 2px 4px rgba(0,0,0,.5), 0 20px 34px -12px rgba(0,0,0,.85);
   color-scheme: dark;
@@ -60,6 +64,8 @@
   --n1: #f2d95f; --n2: #f2a3c0; --n3: #98dcb4; --n4: #9cc6f2; --n5: #c2b0f2;
   --note-ink: #1f1b28; --tape: rgba(255,255,255,.35);
   --good: #4fd18a; --warn: #ffb547; --bad: #ff6b80;
+  --sky: #1c2a56; --sea: #123a52; --sand: #3b3321; --grass: #1d3b28; --road: #2a2e45;
+  --night1: #30276a; --night2: #15112f; --warm1: #3a2032; --warm2: #352f1d; --gridline: rgba(140, 143, 255, .13);
   --shadow: 0 1px 2px rgba(0,0,0,.45), 0 12px 24px -12px rgba(0,0,0,.75);
   --shadow-lift: 0 2px 4px rgba(0,0,0,.5), 0 20px 34px -12px rgba(0,0,0,.85);
   color-scheme: dark;
@@ -338,6 +344,48 @@ label.lbl { display: block; font-size: .8rem; font-weight: 700; color: var(--mut
 .report p { margin: 4px 0; }
 .report.live::after { content: "▍"; color: var(--pop); animation: blink 1s infinite; }
 
+/* Themed boards: each format is a scene, columns sit where the metaphor puts them */
+.board.scene { position: relative; isolation: isolate; overflow: hidden; }
+.scene .col .notes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 14px; align-items: start; }
+.deco { position: absolute; z-index: -1; pointer-events: none; overflow: visible; }
+.deco .cloud { fill: color-mix(in srgb, var(--surface) 88%, transparent); }
+.deco .bird { fill: none; stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.deco .wave { fill: none; stroke: color-mix(in srgb, var(--surface) 75%, transparent); stroke-width: 3; stroke-linecap: round; }
+.deco .star { fill: color-mix(in srgb, var(--ink) 55%, transparent); }
+.deco .dot { fill: color-mix(in srgb, var(--pop) 35%, transparent); }
+.deco .flower { fill: var(--n2); stroke: color-mix(in srgb, var(--ink) 50%, transparent); stroke-width: 1.5; }
+.deco.road { left: 0; right: 0; height: 0; border-top: 5px dashed color-mix(in srgb, var(--surface) 80%, transparent); }
+.board.scene { display: grid; gap: 14px; padding: 18px; border-radius: 24px; align-items: stretch; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 6%, transparent); }
+.scene .col { background: color-mix(in srgb, var(--surface) 80%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.hero-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; min-width: 0; text-align: center; }
+.hero-cell .ill { width: 100%; max-width: 240px; filter: drop-shadow(0 14px 18px rgba(20, 24, 70, .18)); }
+.hero-cell .hname { font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; letter-spacing: -.01em; }
+.hero-cell .hsub { font-size: .82rem; color: var(--muted); max-width: 28ch; }
+.bg-sky { background: linear-gradient(180deg, var(--sky), color-mix(in srgb, var(--sky) 35%, var(--wall))); }
+.bg-sea { background: linear-gradient(180deg, var(--sky) 0 48%, var(--sea) 48% 100%); }
+.bg-beach { background: linear-gradient(180deg, var(--sea) 0 34%, var(--sand) 34% 100%); }
+.bg-road { background: linear-gradient(180deg, var(--sky) 0 62%, var(--road) 62% 100%); }
+.bg-meadow { background: linear-gradient(180deg, var(--sky) 0 38%, var(--grass) 38% 100%); }
+.bg-night { background: radial-gradient(circle at 50% 28%, var(--night1), var(--night2) 75%); }
+.bg-warm { background: linear-gradient(135deg, var(--warm1), var(--warm2)); }
+.bg-grid { background-color: color-mix(in srgb, var(--surface) 70%, var(--wall)); background-image: linear-gradient(var(--gridline) 1px, transparent 1px), linear-gradient(90deg, var(--gridline) 1px, transparent 1px); background-size: 26px 26px; }
+.cicon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; }
+.cicon .ill { width: 40px; }
+.cicon .ill .k { stroke-width: 2.6; }
+@media (max-width: 760px) {
+  .board.scene { display: flex; flex-direction: column; padding: 12px; }
+  .board.scene .hero-cell { order: -1; }
+  .board.scene .hero-cell .ill { max-width: 170px; }
+}
+
+/* Signature */
+.sig { text-align: center; padding: 6px 0 0; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
+.sig b { font-family: var(--f-display); font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
+.sig b i { font-style: normal; color: var(--pop); }
+.i-by { font-size: .78rem; opacity: .65; animation: fadeUp .7s 1.1s ease both; }
+.i-by b { font-family: var(--f-display); font-weight: 800; opacity: 1; }
+.i-by b i { font-style: normal; color: var(--pop); }
+
 /* Format focus filter */
 .frow { display: flex; flex-wrap: wrap; gap: 8px; }
 .fchip { border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: .88rem; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; transition: transform .12s ease, border-color .12s ease; }
@@ -447,7 +495,7 @@ main.enter .ill > *, main.enter .ill g > *, .curtain.in .ill > *, .curtain.in .i
 
 <div id="app"><main class="wrap"><div class="loading">Joining the retro…</div></main></div>
 <div id="toast" class="toast" hidden></div>
-<div id="intro" class="intro" aria-hidden="true"><div class="i-in"><div class="i-logo"><i></i><i></i><i></i></div><div class="i-word"><span><b>Retro</b></span><span><b>Live</b></span></div><div class="i-tag">Look back · Move forward</div></div></div>
+<div id="intro" class="intro" aria-hidden="true"><div class="i-in"><div class="i-logo"><i></i><i></i><i></i></div><div class="i-word"><span><b>Retro</b></span><span><b>Live</b></span></div><div class="i-tag">Look back · Move forward</div><div class="i-by">by <b>Michael<i>Soft</i></b></div></div></div>
 <div id="curtain" class="curtain" aria-hidden="true" hidden></div>
 <canvas id="confetti" hidden></canvas>
 
@@ -559,6 +607,116 @@ Object.assign(ILL, {
   techdebt: svg(`<circle cx="60" cy="46" r="36" class="fw k"/><path d="M60 46L89 25A36 36 0 0 1 96 46z" class="f3"/><circle cx="60" cy="46" r="22" class="k t"/><circle cx="60" cy="46" r="8" class="k t"/><path d="M60 46L89 25" class="k ka"/><circle cx="80" cy="58" r="4.5" class="fp k"/><circle cx="44" cy="30" r="4.5" class="f1 k"/><circle cx="40" cy="62" r="4.5" class="f2 k"/>`),
   value: svg(`<circle cx="52" cy="48" r="34" class="f2 k"/><circle cx="52" cy="48" r="22" class="fw k"/><circle cx="52" cy="48" r="10" class="f2 k"/><path d="M52 48L102 10" class="k"/><path d="M94 8l8 2-2 8" class="k"/><path d="M102 10l8-2M102 10l-2 8" class="k t"/>`),
 });
+const ico = body => `<svg class="ill" viewBox="0 0 48 48" aria-hidden="true" focusable="false">${body}</svg>`;
+const SHAPES = {
+  play: `<circle cx="24" cy="24" r="18" class="f3 k"/><path d="M20 16l12 8-12 8z" class="fk k"/>`,
+  stop: `<path d="M17 6h14l11 11v14L31 42H17L6 31V17z" class="f2 k"/><path d="M16 24h16" class="k"/>`,
+  loop: `<circle cx="24" cy="24" r="20" class="f4"/><path d="M37 19a14 14 0 0 0-25-5M11 29a14 14 0 0 0 25 5" class="k"/><path d="M11 7v7h7M37 41v-7h-7" class="k"/>`,
+  check: `<circle cx="24" cy="24" r="18" class="f3 k"/><path d="M16 24l6 6 11-12" class="k"/>`,
+  mad: `<circle cx="24" cy="24" r="18" class="f2 k"/><path d="M15 17l6 3M33 17l-6 3M17 33q7-6 14 0" class="k"/>`,
+  sad: `<circle cx="24" cy="24" r="18" class="f4 k"/><path d="M18 19v2M30 19v2M17 33q7-5 14 0" class="k"/>`,
+  glad: `<circle cx="24" cy="24" r="18" class="f1 k"/><path d="M18 19v2M30 19v2M16 27q8 9 16 0" class="k"/>`,
+  heart: `<path d="M24 41C10 32 5 24 5 17a9 9 0 0 1 19-4 9 9 0 0 1 19 4c0 7-5 15-19 24z" class="f2 k"/>`,
+  bulb: `<path d="M24 5a13 13 0 0 0-8 23v5h16v-5a13 13 0 0 0-8-23z" class="f1 k"/><path d="M18 38h12M20 43h8" class="k"/>`,
+  puzzle: `<path d="M8 14h9a5 5 0 1 1 10 0h11v10a5 5 0 1 1 0 10v8H8V32a5 5 0 1 0 0-10z" class="f5 k"/>`,
+  star: `<path d="M24 5l5.6 12 13 1.5-9.7 8.8 2.7 12.8L24 33.5 12.4 40.1l2.7-12.8L5.4 18.5l13-1.5z" class="f1 k"/>`,
+  wind: `<path d="M5 18h25a6 6 0 1 0-6-6M5 26h32a6 6 0 1 1-6 6M5 34h14" class="k ka"/>`,
+  anchor: `<circle cx="24" cy="9" r="4" class="fw k"/><path d="M24 13v29M15 21h18M8 29q2 13 16 13q14 0 16-13" class="k"/>`,
+  rocks: `<path d="M3 42l9-17 8 6 8-15 9 11 8 15z" class="f5 k"/>`,
+  island: `<path d="M3 41q21-13 42 0z" class="f1 k"/><path d="M24 35V16" class="k"/><path d="M24 16q-10-6-16 2M24 16q10-6 16 2M24 16q-4-10-12-10M24 16q4-10 12-10" class="k kg"/>`,
+  up: `<circle cx="24" cy="24" r="18" class="f3 k"/><path d="M24 34V14M16 22l8-8 8 8" class="k"/>`,
+  down: `<circle cx="24" cy="24" r="18" class="f2 k"/><path d="M24 14v20M16 26l8 8 8-8" class="k"/>`,
+  plus: `<circle cx="24" cy="24" r="18" class="f3 k"/><path d="M24 15v18M15 24h18" class="k"/>`,
+  cross: `<circle cx="24" cy="24" r="18" class="f2 k"/><path d="M17 17l14 14M31 17L17 31" class="k"/>`,
+  wrench: `<path d="M31 5a10 10 0 0 0-9 14L7 34a4 4 0 0 0 6 6l15-15a10 10 0 0 0 14-9l-6 6-6-2-2-6z" class="f4 k"/>`,
+  delta: `<path d="M24 6l20 36H4z" class="f4 k"/>`,
+  straw: `<rect x="10" y="22" width="28" height="22" class="f1 k"/><path d="M15 28v12M21 26v16M27 28v12M33 26v16" class="k t"/><path d="M5 24L24 6l19 18z" class="f1 k"/>`,
+  wood: `<rect x="10" y="22" width="28" height="22" class="f5 k"/><path d="M10 29h28M10 36h28" class="k t"/><path d="M5 24L24 6l19 18z" class="f5 k"/>`,
+  brick: `<rect x="10" y="22" width="28" height="22" class="f2 k"/><path d="M10 29h28M10 36h28M19 22v7M29 29v7M19 36v8" class="k t"/><path d="M5 24L24 6l19 18z" class="f2 k"/>`,
+  rose: `<path d="M24 45V25" class="k kg"/><path d="M24 36q-8 0-10-7q8 0 10 5" class="f3 k"/><circle cx="24" cy="16" r="11" class="f2 k"/><path d="M18 16q6-9 12 0q-6 7-12 0" class="k t"/>`,
+  thorn: `<path d="M7 41Q24 30 41 8" class="k kg"/><path d="M17 33l-7-7 10 2M28 22l-1-10 6 8" class="f3 k"/>`,
+  bud: `<path d="M24 45V26" class="k kg"/><path d="M24 26q-10-10 0-22q10 12 0 22z" class="f3 k"/><path d="M24 26q-8 2-12-4M24 26q8 2 12-4" class="k kg"/>`,
+  battery: `<rect x="5" y="14" width="34" height="20" rx="4" class="fw k"/><rect x="9" y="18" width="18" height="12" rx="2" class="f3"/><path d="M43 20v8" class="k"/>`,
+  shield: `<path d="M24 4l16 6v12c0 10-7 18-16 22C15 40 8 32 8 22V10z" class="f4 k"/><path d="M17 23l5 5 9-10" class="k"/>`,
+  chat: `<path d="M8 7h32a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H20l-10 8v-8H8a4 4 0 0 1-4-4V11a4 4 0 0 1 4-4z" class="f4 k"/><path d="M13 17h22M13 24h13" class="k t"/>`,
+  flask: `<path d="M20 4v14L8 40a3 3 0 0 0 3 4h26a3 3 0 0 0 3-4L28 18V4z" class="fw"/><path d="M12 32h24l4 8a3 3 0 0 1-3 4H11a3 3 0 0 1-3-4z" class="f3"/><path d="M17 4h14M20 4v14L8 40a3 3 0 0 0 3 4h26a3 3 0 0 0 3-4L28 18V4" class="k"/>`,
+  trophy: `<path d="M14 10H7a7 7 0 0 0 9 10M34 10h7a7 7 0 0 1-9 10M24 28v8" class="k"/><path d="M14 5h20v13a10 10 0 0 1-20 0z" class="f1 k"/><rect x="15" y="36" width="18" height="7" rx="2" class="f5 k"/>`,
+  book: `<path d="M24 12q-8-6-19-4v31q11-2 19 4q8-6 19-4V8q-11-2-19 4z" class="fw k"/><path d="M24 12v31" class="k"/><path d="M10 16q6-1 10 2M28 18q4-3 10-2" class="k t"/>`,
+  peak: `<path d="M3 43l15-25 8 12 6-10 13 23z" class="f3 k"/><path d="M18 18V5l9 4-9 4" class="fp k"/>`,
+  valley: `<path d="M4 8l16 28 8-10 16 16" class="k ka"/><circle cx="20" cy="36" r="4.5" class="f2 k"/>`,
+  turn: `<path d="M8 42V25a12 12 0 0 1 12-12h19" class="k ka"/><path d="M33 6l7 7-7 7" class="k"/><circle cx="8" cy="42" r="3.5" class="f1 k"/>`,
+  flame: `<path d="M24 45c-9 0-15-6-15-14 0-9 8-12 9-23 6 4 7 10 7 13 2-3 4-6 4-10 7 5 10 13 10 20 0 8-6 14-15 14z" class="fp k"/><path d="M24 45c-4 0-7-3-7-7 0-4 4-6 6-11 3 3 8 6 8 11 0 4-3 7-7 7z" class="f1"/>`,
+  sandbag: `<path d="M24 5v9" class="k"/><path d="M11 19q13-7 26 0l4 20q-17 9-34 0z" class="f1 k"/><path d="M17 15q7 5 14 0" class="k"/><path d="M15 30h18" class="k t"/>`,
+  storm: `<path d="M11 30h25a8 8 0 0 0-2-16 11 11 0 0 0-21 3 7 7 0 0 0-2 13z" class="f5 k"/><path d="M25 30l-5 8h7l-4 8" class="k"/>`,
+  sun: `<path d="M24 3v6M24 39v6M3 24h6M39 24h6M9 9l4 4M35 35l4 4M9 39l4-4M35 13l4-4" class="k"/><circle cx="24" cy="24" r="10" class="f1 k"/>`,
+  gear: `<path d="M21 4h6l1 6 5 2 5-4 4 4-4 5 2 5 6 1v6l-6 1-2 5 4 5-4 4-5-4-5 2-1 6h-6l-1-6-5-2-5 4-4-4 4-5-2-5-6-1v-6l6-1 2-5-4-5 4-4 5 4 5-2z" class="f4 k"/><circle cx="24" cy="24" r="6" class="fw k"/>`,
+  parachute: `<path d="M6 22l14 15M42 22L28 37M24 22v15" class="k t"/><path d="M5 22a19 19 0 0 1 38 0z" class="f2 k"/><rect x="18" y="35" width="12" height="9" rx="2" class="f1 k"/>`,
+  abyss: `<path d="M3 16h15v29H3zM30 16h15v29H30z" class="f5 k"/><path d="M18 22l3 6-3 6 3 6M30 22l-3 6 3 6-3 6" class="k t"/>`,
+  bridge: `<path d="M3 22q21-14 42 0M3 34h42M8 34V22M40 34V22M16 34v-13M24 34V17M32 34v-13" class="k"/><path d="M3 40q5-3 10 0t10 0t10 0t12 0" class="k ka"/>`,
+  skull: `<path d="M24 5C14 5 8 12 8 20c0 6 3 10 7 12v8h18v-8c4-2 7-6 7-12 0-8-6-15-16-15z" class="fw k"/><circle cx="18" cy="21" r="4" class="fk"/><circle cx="30" cy="21" r="4" class="fk"/><path d="M20 40v-4M24 40v-4M28 40v-4" class="k t"/>`,
+  warning: `<path d="M24 5l20 36H4z" class="f1 k"/><path d="M24 18v10M24 34v1" class="k"/>`,
+  snail: `<path d="M5 41h30q7 0 9-7" class="k"/><path d="M36 39V23M41 37V25" class="k t"/><circle cx="21" cy="28" r="12" class="f1 k"/><path d="M21 28a5 5 0 1 1 5-5" class="k t"/>`,
+  ghost: `<path d="M10 43V22a14 14 0 0 1 28 0v21l-5-4-5 4-4-4-5 4-4-4z" class="fw k"/><circle cx="19" cy="22" r="2.6" class="fk"/><circle cx="29" cy="22" r="2.6" class="fk"/>`,
+  bolt: `<path d="M28 3L9 28h13l-4 17 21-27H26z" class="f1 k"/>`,
+  sprout: `<path d="M24 45V22" class="k kg"/><path d="M24 27q-15 0-15-15q15 0 15 15zM24 22q13 0 15-13q-13 0-15 13z" class="f3 k"/>`,
+  gift: `<rect x="7" y="19" width="34" height="24" rx="3" class="f2 k"/><rect x="4" y="12" width="40" height="8" rx="2" class="f2 k"/><path d="M24 12v31" class="k"/><path d="M24 12q-11-10-13-2q2 4 13 2q11 2 13-2q-2-8-13 2" class="k"/>`,
+  miss: `<circle cx="21" cy="27" r="16" class="fw k"/><circle cx="21" cy="27" r="8" class="f2 k"/><path d="M33 9l11-6M37 14l7 2M44 3l-1 7" class="k"/>`,
+  megaphone: `<path d="M14 30l3 11h6l-3-11M38 17q5 8 0 16" class="k"/><path d="M5 19v12h9l19 10V9L14 19z" class="f4 k"/>`,
+  dice: `<rect x="8" y="8" width="32" height="32" rx="7" class="fw k"/><circle cx="17" cy="17" r="3" class="fk"/><circle cx="24" cy="24" r="3" class="fk"/><circle cx="31" cy="31" r="3" class="fk"/>`,
+};
+const COLICON = {
+  start: "play", stop: "stop", cont: "loop", keep: "check", mad: "mad", sad: "sad", glad: "glad",
+  liked: "heart", learned: "bulb", lacked: "puzzle", longed: "star", wind: "wind", anchor: "anchor", rocks: "rocks", island: "island",
+  more: "up", less: "down", drop: "cross", add: "plus", improve: "wrench", straw: "straw", wood: "wood", brick: "brick",
+  plus: "plus", delta: "delta", rose: "rose", thorn: "thorn", bud: "bud", energy: "battery", trust: "shield", comms: "chat", try: "flask",
+  thanks: "heart", proud: "trophy", learnt: "book", high: "peak", low: "valley", turn: "turn", air: "flame", sand: "sandbag", storm: "storm", sky: "sun",
+  engine: "gear", parachute: "parachute", abyss: "abyss", bridge: "bridge", fail: "skull", signs: "warning", prevent: "shield",
+  slow: "snail", scary: "ghost", quickwin: "bolt", invest: "sprout", delivered: "gift", missed: "miss", feedback: "megaphone", bet: "dice",
+};
+const colIcon = key => SHAPES[COLICON[key]] ? ico(SHAPES[COLICON[key]]) : "";
+
+/* Scene decorations by background type (behind the zones, visible in the gaps) */
+const dSvg = (style, vb, body) => `<svg class="deco" style="${style}" viewBox="${vb}" aria-hidden="true" focusable="false">${body}</svg>`;
+const cloud = (x, y, w) => dSvg(`left:${x}%;top:${y}%;width:${w}px`, "0 0 100 50", `<path class="cloud" d="M18 46h64a15 15 0 0 0 0-30 22 22 0 0 0-40-6 14 14 0 0 0-24 36z"/>`);
+const birds = (x, y) => dSvg(`left:${x}%;top:${y}%;width:60px`, "0 0 60 30", `<path class="bird" d="M4 14q6-7 12 0q6-7 12 0M34 22q5-6 10 0q5-6 10 0"/>`);
+const wave = y => dSvg(`left:0;right:0;width:100%;top:calc(${y}% - 9px);height:18px`, "0 0 400 18\" preserveAspectRatio=\"none", `<path class="wave" d="M0 9q12-8 25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0"/>`);
+const stars = () => [[8, 6], [30, 3], [47, 12], [56, 4], [70, 8], [93, 5], [44, 46], [58, 52], [50, 30], [3, 50], [97, 44], [40, 70], [62, 74]].map(([x, y], i) => dSvg(`left:${x}%;top:${y}%;width:${i % 3 ? 10 : 16}px`, "0 0 20 20", `<path class="star" d="M10 0l2.5 7.5L20 10l-7.5 2.5L10 20l-2.5-7.5L0 10l7.5-2.5z"/>`)).join("");
+const dots = () => [[42, 10, 14], [57, 22, 9], [46, 74, 11], [60, 84, 16], [52, 60, 8]].map(([x, y, w]) => dSvg(`left:${x}%;top:${y}%;width:${w}px`, "0 0 10 10", `<circle class="dot" cx="5" cy="5" r="5"/>`)).join("");
+const flowers = () => [[40, 88], [45, 93], [56, 90], [61, 94]].map(([x, y]) => dSvg(`left:${x}%;top:${y}%;width:14px`, "0 0 14 14", `<circle class="flower" cx="7" cy="7" r="5"/>`)).join("");
+const DECO = {
+  sky: () => cloud(40, 6, 110) + cloud(56, 66, 90) + cloud(36, 84, 70) + birds(58, 12) + birds(38, 52),
+  sea: () => cloud(41, 8, 100) + birds(56, 20) + wave(48) + wave(70) + wave(88),
+  beach: () => wave(34) + wave(18) + cloud(44, 3, 80),
+  road: () => cloud(40, 8, 100) + cloud(58, 30, 70) + birds(46, 40) + `<div class="deco road" style="top:81%"></div>`,
+  meadow: () => cloud(40, 4, 100) + cloud(58, 16, 70) + birds(46, 22) + flowers(),
+  night: () => stars(),
+  warm: () => dots(),
+  grid: () => "",
+};
+
+/* Board scenes: background, grid columns, and where each column sits around the hero illustration */
+const C3 = "minmax(0, 1fr) minmax(150px, .7fr) minmax(0, 1fr)", E3 = "repeat(3, minmax(0, 1fr))";
+const SCENES = {
+  ssc: { bg: "road", cols: C3, areas: ["start hero stop", "cont cont cont"], sub: "Green to start, red to stop, keep the flow going." },
+  msg: { bg: "warm", cols: E3, areas: ["hero hero hero", "mad sad glad"], sub: "How did this sprint feel?" },
+  fourl: { bg: "meadow", cols: C3, areas: ["liked hero learned", "lacked hero longed"], sub: "Four leaves, four angles on the sprint." },
+  sailboat: { bg: "sea", cols: C3, areas: ["wind hero island", "anchor hero rocks"], sub: "Our team is the boat." },
+  starfish: { bg: "beach", cols: C3, areas: ["start hero stop", "more hero less", "keep keep keep"], sub: "Five arms, five ways to adjust." },
+  daki: { bg: "grid", cols: C3, areas: ["drop hero add", "keep hero improve"], sub: "Sort the team's practices into four boxes." },
+  pigs: { bg: "meadow", cols: E3, areas: ["hero hero hero", "straw wood brick"], sub: "Will it survive the big bad wolf?" },
+  plusdelta: { bg: "grid", cols: C3, areas: ["plus hero delta"], sub: "Keep it short and sharp." },
+  rose: { bg: "meadow", cols: C3, areas: ["rose hero bud", "thorn hero bud"], sub: "Every rose has its thorn, and a bud about to bloom." },
+  kalm: { bg: "grid", cols: C3, areas: ["keep hero add", "more hero less"], sub: "Turn the dials on how we work." },
+  health: { bg: "warm", cols: C3, areas: ["energy hero trust", "comms hero try"], sub: "Take the team's pulse." },
+  kudos: { bg: "warm", cols: E3, areas: ["hero hero hero", "thanks proud learnt"], sub: "Medals all round." },
+  highs: { bg: "sky", cols: E3, areas: ["hero hero hero", "high turn low"], sub: "Replay the sprint, peak by peak." },
+  balloon: { bg: "sky", cols: C3, areas: ["sky hero storm", "air hero sand"], sub: "Our team is the balloon." },
+  speedcar: { bg: "road", cols: C3, areas: ["engine hero parachute", "abyss hero bridge"], sub: "Our team is the car." },
+  premortem: { bg: "night", cols: C3, areas: ["fail hero signs", "prevent prevent prevent"], sub: "The crystal ball says the next sprint failed. Why?" },
+  techdebt: { bg: "grid", cols: C3, areas: ["slow hero scary", "quickwin hero invest"], sub: "Scan the codebase for trouble." },
+  value: { bg: "warm", cols: C3, areas: ["delivered hero missed", "feedback hero bet"], sub: "Aim at what users actually need." },
+};
+
 const SPARK = `<svg class="spark" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c.6 4.2 3.8 7.4 8 8-4.2.6-7.4 3.8-8 8-.6-4.2-3.8-7.4-8-8 4.2-.6 7.4-3.8 8-8z"/></svg>`;
 const THINK = label => `<div class="thinking"><i></i><i></i><i></i> ${label}</div>`;
 
@@ -730,7 +888,7 @@ function view() {
   if (S.session === undefined) return `<main class="wrap"><div class="loading">Loading your retros…</div></main>`;
   const ph = phase();
   const body = !S.bid ? homeView() : !sess() ? `<div class="loading">Opening the retro…</div>` : phaseView(ph);
-  return header() + `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s">${banners()}${body}</main>` + facBar();
+  return header() + `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s">${banners()}${body}<footer class="sig">Retro Live · made by <b>Michael<i>Soft</i></b></footer></main>` + facBar();
 }
 
 function header() {
@@ -1060,10 +1218,19 @@ function boardView(ph) {
   } else if (k === "reveal") {
     status = `<div class="statusbar"><span class="meter">${plural(S.cards.length, "note")} on the wall. To group two notes about the same thing, tap “Group” on one, then “Group here” on the other.</span></div>`;
   }
-  return phaseHead(ph) + status + (k === "reveal" ? groupsPanel() : "") + `<div class="board">${method().cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
+  return phaseHead(ph) + status + (k === "reveal" ? groupsPanel() : "") + boardScene(k);
 }
 
-function columnView([key, title, hint], i, k) {
+function boardScene(k) {
+  const mk = sess().method, sc = SCENES[mk], m = method();
+  if (!sc) return `<div class="board">${m.cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
+  const areas = sc.areas.map(r => "'" + r.split(" ").map(a => a === "hero" ? "hero" : "z-" + a).join(" ") + "'").join(" ");
+  return `<div class="board scene bg-${sc.bg}" style="grid-template-columns:${sc.cols};grid-template-areas:${areas}">${(DECO[sc.bg] || (() => ""))()}
+    <div class="hero-cell" style="grid-area:hero">${ILL[mk] || ""}<div class="hname">${esc(m.name)}</div><div class="hsub">${esc(sc.sub)}</div></div>
+    ${m.cols.map((c, i) => columnView(c, i, k, true)).join("")}</div>`;
+}
+
+function columnView([key, title, hint], i, k, inScene) {
   const tops = topCards().filter(c => c.col === key).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   const count = S.cards.filter(c => c.col === key).length;
   let notes;
@@ -1075,8 +1242,8 @@ function columnView([key, title, hint], i, k) {
   }
   const addable = (k === "write" || k === "reveal") && canWrite();
   const id = `new-${key}`;
-  return `<section class="col" style="--note:var(--n${i % 5 + 1})">
-    <header><span class="badge" aria-hidden="true">${esc(title.replace(/^(House of |The )/, "").charAt(0))}</span><div><h3>${esc(title)}</h3><p>${esc(hint)}</p></div><span class="count" title="Notes">${count}</span></header>
+  return `<section class="col" style="--note:var(--n${i % 5 + 1})${inScene ? `;grid-area:z-${key}` : ""}">
+    <header>${colIcon(key) ? `<span class="cicon" aria-hidden="true">${colIcon(key)}</span>` : `<span class="badge" aria-hidden="true">${esc(title.replace(/^(House of |The )/, "").charAt(0))}</span>`}<div><h3>${esc(title)}</h3><p>${esc(hint)}</p></div><span class="count" title="Notes">${count}</span></header>
     ${notes || !addable ? `<div class="notes">${notes || `<div class="empty">No notes</div>`}</div>` : ""}
     ${addable ? `<div class="add"><textarea id="${id}" class="field" placeholder="One idea per note…" maxlength="500" data-add="${key}">${draft(id)}</textarea>
       <div class="row"><span class="hint">Enter to add · Shift+Enter for a new line</span><button class="btn sm primary" data-act="add" data-col="${key}">Add</button></div></div>` : ""}

@@ -7,7 +7,9 @@ A live, interactive sprint retrospective board, one retro per sprint.
 - 18 formats, filtered by focus (short on time, feelings, team, ways of working, goals, risks, quality, customers, wins): Start·Stop·Continue, Mad·Sad·Glad, 4 Ls, Sailboat, Starfish, DAKI, Three Little Pigs, Plus/Delta, Rose·Thorn·Bud, KALM, Team health check, Kudos wall, Highs & Lows, Hot air balloon, Speed car, Pre-mortem, Tech debt radar, Customer value
 - 7 steps: Weather → Write (hidden notes) → Reveal & group → Dot voting → Discuss → Actions → ROTI
 - Shared timer, who's online, copyable Markdown summary
+- Every format has its own illustrated board: a scene (sky, sea, road, meadow, night…) with the hero illustration in the middle and columns placed where the metaphor puts them, each with its own icon
 - Hand-drawn illustrations for every format and step, drawn in with motion
+- Signed "made by MichaelSoft"
 - Intro animation, full-screen step transitions, staggered screen entrances, join notifications (all off with reduced motion)
 - AI (facilitator, via the `sample` capability): suggested note groups with theme names, action ideas for the topic under discussion, and a shared retro report
 
