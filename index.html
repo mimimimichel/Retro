@@ -598,6 +598,33 @@ kbd { font-family: var(--f-mono); font-size: .78rem; background: var(--accent-so
 @keyframes cardIn { from { opacity: 0; transform: translateY(24px) scale(.97); } }
 @media (prefers-reduced-motion: reduce) { .modal, .mcard { animation: none; } }
 
+/* Vote & discussion on the board */
+.cnote.votable { cursor: pointer; }
+.cnote.votable:hover { box-shadow: 0 0 0 3px var(--pop), var(--shadow-lift); }
+.cnote .votes .dots i { width: 13px; height: 13px; }
+.cnote.target { cursor: pointer; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent), var(--shadow); }
+.cnote.sel { box-shadow: 0 0 0 4px var(--accent), var(--shadow-lift); z-index: 8; }
+.cnote.dim { opacity: .5; }
+.cnote.discussed { opacity: .38; }
+.cnote.pickable { cursor: pointer; }
+.cnote.pickable:hover { opacity: 1; box-shadow: 0 0 0 3px var(--accent), var(--shadow-lift); }
+.cnote.focusnote { z-index: 20; transform: rotate(0deg) scale(1.22); box-shadow: 0 0 0 5px var(--pop), var(--shadow-lift); }
+.cnote .rankb { font-family: var(--f-display); font-weight: 800; font-size: .9rem; color: var(--note-ink); }
+.cnote .vtotal { font-size: .72rem; padding: 1px 7px; }
+.donemark { position: absolute; top: -10px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: var(--good); color: #fff; font-weight: 800; display: grid; place-items: center; font-size: .8rem; box-shadow: var(--shadow); }
+.discuss2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+@media (max-width: 860px) { .discuss2 { grid-template-columns: 1fr; } }
+.nowcard { background: var(--note, var(--surface)); color: var(--note-ink); border-radius: 4px 4px 22px 4px; padding: 18px 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.nowcard.empty-now { background: var(--surface); color: var(--ink); border: 2px dashed var(--line); box-shadow: none; }
+.nowcard.empty-now p { margin: 0; color: var(--muted); }
+.nowcard .txt { font-family: var(--f-note); font-size: clamp(1.6rem, 2.6vw, 2.3rem); line-height: 1.1; margin: 0; overflow-wrap: anywhere; }
+.nowcard .child p { font-size: 1.2rem; }
+.nowtop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.nowtop .eyebrow { color: var(--note-ink); opacity: .75; }
+.nowcard.empty-now .eyebrow { color: var(--pop); opacity: 1; }
+.nowacts { display: flex; gap: 8px; margin-top: auto; }
+.nowcard:not(.empty-now) .btn { background: var(--note-ink); color: var(--note); border-color: var(--note-ink); box-shadow: none; }
+
 /* Signature */
 .sig { text-align: center; padding: 6px 0 0; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
 .sig b { font-family: var(--f-display); font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
@@ -1169,7 +1196,7 @@ function banners() {
   if (!S.me) h += `<div class="banner">You're in view-only mode. Sign in to claude.ai to join in.</div>`;
   else if (S.readOnly) h += `<div class="banner">Your access doesn't allow editing. Ask whoever shared the retro to give you the Contributor role.</div>`;
   if (S.bid && isDone()) h += `<div class="banner info">This retro is closed. Tap any step above to look back at it.${S.me && sess().facilitator === S.me ? `<button class="btn sm" data-act="reopen">Reopen</button>` : ""}</div>`;
-  if (S.mergeSrc) h += `<div class="banner info">Pick the note to group it with, then tap “Group here”. <button class="link" data-act="mergecancel">Cancel</button></div>`;
+  if (S.mergeSrc) h += `<div class="banner info">Now click the note to stack it on. <button class="link" data-act="mergecancel">Cancel</button></div>`;
   return h;
 }
 
@@ -1210,17 +1237,17 @@ function guide(k, ph) {
     mid = meter(doneN, on, "done"); right = doneBtn(meDone ? "Keep writing" : "I'm done");
   } else if (k === "reveal") {
     t = "Read the board together";
-    sub = "Drag a note onto another to stack duplicates, or drop it anywhere to move it.";
+    sub = "To group duplicates, drag a note onto another, or use ⧉ then click the note to stack it on.";
     mid = `<div class="gmeter"><span>${plural(S.cards.length, "note")} on the board</span></div>`;
   } else if (k === "vote") {
     const max = sess().votesPerPerson || 3, used = votesUsed();
     t = used >= max ? "All your votes are placed" : `Your turn: place your ${plural(max, "vote")}`;
-    sub = `Tap + on the notes you most want to discuss. ${max - used} left.`;
+    sub = `Click a note on the board to give it a vote (− to take it back). ${max - used} left.`;
     mid = `<span class="vleft"><span class="dots">${Array.from({ length: max }, (_, i) => `<i class="${i < used ? "on" : ""}"></i>`).join("")}</span></span>` + meter(doneN, on, "voted");
     right = doneBtn(meDone ? "Change my votes" : "I've voted");
   } else if (k === "discuss") {
     const list = ranked();
-    t = isFac() ? "Pick a topic from the agenda, then capture actions" : "Talk it through and suggest actions";
+    t = isFac() ? "Click a note to discuss it, then capture actions" : "Talk it through and suggest actions";
     sub = `${list.filter(x => x.c.discussed).length} of ${list.length} topics discussed so far.`;
   } else if (k === "actions") {
     const no = S.actions.filter(a => !a.owner).length;
@@ -1702,14 +1729,18 @@ function canvasNote(c, k, P, i) {
   if (k === "write" && (!mine || S.present)) return `<div class="note cnote hidden static" style="${base}" aria-label="Hidden note"><div class="bars"><i style="width:88%"></i><i style="width:60%"></i></div></div>`;
   const kids = childrenOf(c.id);
   const isNew = S.cardsLoaded && !S.seen.has(c.id);
-  const draggable = !S.present && canWrite() && ((k === "write" && mine) || k === "reveal");
+  const draggable = !S.present && !S.mergeSrc && canWrite() && ((k === "write" && mine) || k === "reveal");
+  const R = k === "discuss" && S.rankMap ? S.rankMap[c.id] : null;
+  const fid = sess().focusCardId;
   if (S.editing === c.id) {
     const id = `edit-${c.id}`;
     return `<article class="note cnote editing static" style="${base}"><textarea id="${id}" maxlength="500" data-edit="${c.id}">${draft(id, c.text)}</textarea>
       <footer><span></span><span class="acts"><button class="nbtn" data-act="editcancel">Cancel</button><button class="nbtn strong" data-act="editsave" data-id="${c.id}">Save</button></span></footer></article>`;
   }
   let left = mine && !S.present ? `<span class="tag">You</span>` : `<span></span>`, acts = "";
-  if (!S.present && (k === "write" || k === "reveal") && mine && canWrite()) acts = `<button class="nbtn" data-act="edit" data-id="${c.id}" aria-label="Edit">✎</button><button class="nbtn" data-act="del" data-id="${c.id}" aria-label="Delete">✕</button>`;
+  if (!S.present && (k === "write" || k === "reveal") && mine && canWrite()) acts = `<button class="nbtn" data-act="edit" data-id="${c.id}" aria-label="Edit" title="Edit">✎</button><button class="nbtn" data-act="del" data-id="${c.id}" aria-label="Delete" title="Delete">✕</button>`;
+  if (!S.present && k === "reveal" && canWrite() && !S.mergeSrc) acts += `<button class="nbtn" data-act="merge" data-id="${c.id}" aria-label="Stack onto another note" title="Stack onto another note">⧉</button>`;
+  if (k === "discuss" && R) { left = `<span class="rankb">#${R.rank}</span>`; acts = `<span class="vtotal" title="Votes">${R.v} ${R.v === 1 ? "vote" : "votes"}</span>`; }
   if (k === "vote" && !S.present) {
     const mv = myVotes()[c.id] || 0, rest = (sess().votesPerPerson || 3) - votesUsed();
     left = `<span class="votes"><button class="vbtn" data-act="vote" data-id="${c.id}" data-d="-1" aria-label="Remove a vote" ${mv > 0 && canWrite() ? "" : "disabled"}>−</button>
@@ -1717,12 +1748,18 @@ function canvasNote(c, k, P, i) {
       <button class="vbtn" data-act="vote" data-id="${c.id}" data-d="1" aria-label="Add a vote" ${rest > 0 && canWrite() ? "" : "disabled"}>+</button></span>`;
   }
   const kidsH = kids.map(ch => `<div class="child"><p>${esc(ch.text)}</p>${k === "reveal" && canWrite() && !S.present ? `<button class="nbtn" data-act="unmerge" data-id="${ch.id}" aria-label="Ungroup">↩</button>` : ""}</div>`).join("");
-  return `<article class="note cnote ${mine && !S.present ? "mine" : ""} ${isNew ? "pop" : ""} ${draggable ? "" : "static"}" style="${base}" data-id="${c.id}" ${draggable ? 'data-drag="1"' : ""}>
+  let extra = "", cls = "";
+  if (k === "reveal" && S.mergeSrc) { if (S.mergeSrc === c.id) cls = "sel"; else { cls = "target"; extra = `data-act="mergehere"`; } }
+  else if (k === "vote" && !S.present && canWrite() && votesUsed() < (sess().votesPerPerson || 3)) { cls = "votable"; extra = `data-act="vote" data-d="1" title="Click to give this note a vote"`; }
+  else if (k === "discuss") { cls = (c.id === fid ? "focusnote" : fid ? "dim" : "") + (c.discussed && c.id !== fid ? " discussed" : ""); if (isFac() && !S.present && c.id !== fid) { cls += " pickable"; extra = `data-act="focus" title="Discuss this topic"`; } }
+  return `<article class="note cnote ${mine && !S.present ? "mine" : ""} ${isNew ? "pop" : ""} ${draggable ? "" : "static"} ${cls}" style="${base}" data-id="${c.id}" ${draggable ? 'data-drag="1"' : ""} ${extra}>
     ${c.theme && kids.length ? `<span class="theme">${esc(c.theme)}</span>` : ""}<p class="txt">${esc(c.text)}</p>${kidsH}
+    ${k === "discuss" && c.discussed && c.id !== fid ? `<span class="donemark" aria-label="Discussed">✓</span>` : ""}
     <footer>${left}<span class="acts">${acts}</span></footer></article>`;
 }
 
 function boardScene(k) {
+  if (k === "discuss") { S.rankMap = {}; ranked().forEach((x, i) => { S.rankMap[x.c.id] = { rank: i + 1, v: x.v }; }); }
   const mk = sess().method, LD = LAYOUTS[mk], m = method();
   if (!LD) return `<div class="board">${m.cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
   const W = canvasW(), L = sceneLayout(mk, W), pos = notePositions(L);
@@ -1796,24 +1833,17 @@ function ranked() {
 }
 
 function discussView(ph) {
-  const list = ranked();
-  const fid = sess().focusCardId;
-  const cur = list.find(x => x.c.id === fid) || null;
-  const colName = key => (method().cols.find(c => c[0] === key) || [, ""])[1];
-  const focus = cur ? `<article class="note" style="--note:${noteVar(cur.c.col)}">
-      <span class="tag">${esc(colName(cur.c.col))}</span>${cur.c.theme && childrenOf(cur.c.id).length ? `<span class="theme">${esc(cur.c.theme)}</span>` : ""}<p class="txt">${esc(cur.c.text)}</p>
+  const list = ranked(), fid = sess().focusCardId;
+  const idx = list.findIndex(x => x.c.id === fid), cur = idx >= 0 ? list[idx] : null;
+  const now = cur ? `<div class="nowcard" style="--note:${noteVar(cur.c.col)}">
+      <div class="nowtop"><span class="eyebrow">Now discussing · #${idx + 1}</span><span class="vtotal">${plural(cur.v, "vote")}</span><span class="tag">${esc(colName(cur.c.col))}</span></div>
+      ${cur.c.theme && childrenOf(cur.c.id).length ? `<span class="theme">${esc(cur.c.theme)}</span>` : ""}<p class="txt">${esc(cur.c.text)}</p>
       ${childrenOf(cur.c.id).map(ch => `<div class="child"><p>${esc(ch.text)}</p></div>`).join("")}
-      <footer><span class="vtotal">${plural(cur.v, "vote")}</span><span></span></footer></article>`
-    : `<div class="empty">${isFac() ? "Pick the first topic from the agenda, or tap “Next topic”." : "The facilitator will pick the first topic."}</div>`;
-  return phaseHead(ph) + `<div class="discuss">
-    <div class="focus"><div class="eyebrow">Now discussing</div>${focus}
-      <div class="panel"><h3 style="font-size:1.1rem;margin-bottom:12px">Add an action${cur ? " for this topic" : ""}</h3>${actionForm(cur ? cur.c.id : null)}${actionSuggest(cur ? cur.c.id : null)}
-      <div style="margin-top:14px">${actionList(true)}</div></div></div>
-    <div><div class="eyebrow" style="margin-bottom:10px">Agenda · ${plural(list.length, "topic")}</div>
-      ${list.length ? `<ol class="rank">${list.map((x, i) => `<li class="${x.c.id === fid ? "cur" : ""} ${x.c.discussed && x.c.id !== fid ? "done" : ""}" style="--note:${noteVar(x.c.col)}">
-        <span class="pos">${i + 1}</span><span class="sw"></span><span class="t">${esc(x.c.text)}${childrenOf(x.c.id).length ? ` <em style="color:var(--muted)">(+${childrenOf(x.c.id).length})</em>` : ""}</span>
-        <span class="v">${x.v}</span>${isFac() && x.c.id !== fid ? `<button class="btn sm" data-act="focus" data-id="${x.c.id}">Discuss</button>` : ""}</li>`).join("")}</ol>` : `<div class="empty">No notes</div>`}
-    </div></div>`;
+      ${isFac() ? `<div class="nowacts"><button class="btn sm" data-act="nexttopic">Next topic →</button></div>` : ""}</div>`
+    : `<div class="nowcard empty-now"><span class="eyebrow">Now discussing</span><p>${isFac() ? (list.length ? "Click a note on the board to discuss it, or start with the most voted one." : "No notes to discuss.") : "The facilitator will pick the first topic."}</p>${isFac() && list.length ? `<div class="nowacts"><button class="btn primary sm" data-act="nexttopic">Start with #1 →</button></div>` : ""}</div>`;
+  return phaseHead(ph) + `<div class="discuss2">${now}
+      <div class="panel"><h3 style="font-size:1.05rem;margin-bottom:10px">Add an action${cur ? " for this topic" : ""}</h3>${actionForm(cur ? cur.c.id : null)}${actionSuggest(cur ? cur.c.id : null)}
+      <div style="margin-top:12px">${actionList(true)}</div></div></div>` + boardScene("discuss");
 }
 
 function actionForm(cardId) {
@@ -2074,7 +2104,7 @@ async function nextTopic() {
 document.addEventListener("input", e => { const t = e.target; if (t && t.id) { S.drafts[t.id] = t.value; if (t.id === "new-sprint") schedule(); } });
 document.addEventListener("change", e => { const t = e.target; if (t && t.id === "setup-votes") S.drafts[t.id] = t.value; });
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && (S.help || S.menu || S.inlineNew)) { S.help = false; S.menu = null; S.inlineNew = null; schedule(); }
+  if (e.key === "Escape" && (S.help || S.menu || S.inlineNew || S.mergeSrc)) { S.help = false; S.menu = null; S.inlineNew = null; S.mergeSrc = null; schedule(); }
 });
 document.addEventListener("click", e => { if (S.menu && !e.target.closest("[data-act]") && !e.target.closest(".pop-menu")) { S.menu = null; schedule(); } });
 document.addEventListener("keydown", e => {
@@ -2189,7 +2219,8 @@ document.addEventListener("click", async e => {
     case "mergecancel": S.mergeSrc = null; schedule(); break;
     case "mergehere": {
       const src = S.mergeSrc; if (!src || src === id) return;
-      S.mergeSrc = null; schedule();
+      S.mergeSrc = null;
+      S.cards = S.cards.map(c => c.id === src || c.parent === src ? { ...c, parent: id } : c); schedule(); toast("Stacked.");
       for (const ch of S.cards.filter(c => c.parent === src)) await write(() => S.db.doc(path("cards/" + ch.id)).update({ parent: id }));
       await write(() => S.db.doc(path("cards/" + src)).update({ parent: id }));
       break;
@@ -2262,11 +2293,12 @@ document.addEventListener("pointermove", e => {
   drag.canvas.querySelectorAll(".zone").forEach(el => el.classList.toggle("on", el.dataset.z === z));
   let tgt = null;
   if (phase() >= 0 && PHASES[phase()].key === "reveal") {
-    drag.el.style.pointerEvents = "none";
-    const under = document.elementFromPoint(e.clientX, e.clientY);
-    drag.el.style.pointerEvents = "";
-    const t = under && under.closest(".cnote[data-id]");
-    if (t && t.dataset.id !== drag.id) tgt = t;
+    const px = x + NOTE_W / 2, py = y + 24;
+    drag.canvas.querySelectorAll(".cnote[data-id]").forEach(n => {
+      if (n === drag.el) return;
+      const l = n.offsetLeft, t = n.offsetTop;
+      if (px >= l - 6 && px <= l + n.offsetWidth + 6 && py >= t - 6 && py <= t + n.offsetHeight + 6) tgt = n;
+    });
   }
   if (drag.target && drag.target !== tgt) drag.target.classList.remove("droptarget");
   if (tgt) tgt.classList.add("droptarget");
