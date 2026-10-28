@@ -378,6 +378,47 @@ label.lbl { display: block; font-size: .8rem; font-weight: 700; color: var(--mut
   .board.scene .hero-cell .ill { max-width: 170px; }
 }
 
+/* Whiteboard canvas: the drawing fills the board, sticky notes sit on it */
+.composer { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); }
+.zchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.zchip { display: inline-flex; align-items: center; gap: 6px; border: 2px solid transparent; background: color-mix(in srgb, var(--note) 30%, var(--surface)); color: var(--ink); border-radius: 999px; padding: 3px 12px 3px 4px; font-weight: 700; font-size: .85rem; }
+.zchip .ill { width: 26px; }
+.zchip .ill .k { stroke-width: 2.6; }
+.zchip.on { border-color: var(--ink); background: var(--note); color: var(--note-ink); }
+.crow { display: flex; gap: 8px; align-items: flex-end; }
+.crow textarea { flex: 1; min-width: 0; min-height: 52px; resize: vertical; font-family: var(--f-note); font-size: 1.3rem; line-height: 1.15; }
+.chint { font-size: .78rem; color: var(--muted); }
+.canvas-wrap { overflow-x: auto; overflow-y: hidden; border-radius: 26px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 7%, transparent), var(--shadow); -webkit-overflow-scrolling: touch; }
+.canvas { position: relative; isolation: isolate; overflow: hidden; }
+.zone { position: absolute; border: 2px dashed color-mix(in srgb, var(--note) 70%, var(--ink) 12%); border-radius: 22px; background: color-mix(in srgb, var(--note) 13%, transparent); transition: background .15s ease; }
+.zone.on { background: color-mix(in srgb, var(--note) 20%, transparent); border-style: solid; border-color: var(--note); }
+.zlabel { position: absolute; left: 12px; top: 10px; right: 10px; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+.zlabel > div { min-width: 0; }
+.zlabel h3 { font-size: 1.05rem; font-weight: 800; }
+.zlabel p { margin: 0; font-size: .76rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zlabel .count { margin-left: auto; }
+.zadd { pointer-events: auto; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--note); color: var(--note-ink); font-weight: 800; font-size: 1.2rem; line-height: 1; display: grid; place-items: center; box-shadow: var(--shadow); flex: none; }
+.zadd:hover { transform: scale(1.1); }
+.zhero { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; pointer-events: none; z-index: 0; }
+.zhero .ill { width: auto; height: auto; max-width: 100%; max-height: 72%; flex: 1 1 auto; min-height: 0; filter: drop-shadow(0 18px 22px rgba(20, 24, 70, .2)); }
+.zhero .hname { font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; letter-spacing: -.01em; }
+.zhero .hsub { font-size: .82rem; color: var(--muted); max-width: 30ch; }
+.cnote { position: absolute; width: 150px; padding: 13px 10px 7px; z-index: 2; touch-action: none; cursor: grab; transform: rotate(var(--tilt)); }
+.cnote:hover { box-shadow: var(--shadow-lift); z-index: 6; }
+.cnote .txt { font-size: 1.18rem; }
+.cnote::before { width: 46px; margin-left: -23px; height: 15px; top: -7px; }
+.cnote.static { cursor: default; touch-action: auto; }
+.cnote.dragging { cursor: grabbing; z-index: 30; box-shadow: var(--shadow-lift); transform: rotate(0deg) scale(1.06); transition: none; }
+.cnote.droptarget { box-shadow: 0 0 0 4px var(--accent), var(--shadow-lift); }
+.cnote.editing { width: 230px; z-index: 25; }
+.cnote footer .nbtn { padding: 1px 7px; font-size: .7rem; }
+.cnote .child p { font-size: 1rem; }
+.cnote .vbtn { width: 24px; height: 24px; font-size: .95rem; }
+.cnote.hidden { min-height: 64px; }
+main.enter .canvas .cnote { animation: noteIn .6s cubic-bezier(.2, 1.4, .4, 1) backwards; animation-delay: calc(var(--base) + 450ms + var(--s, 0) * 45ms); }
+main.enter .canvas .zone { animation: rise .6s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--base) + 150ms + var(--s, 0) * 70ms); }
+@media (prefers-reduced-motion: reduce) { main.enter .canvas .cnote, main.enter .canvas .zone { animation: none; } }
+
 /* Signature */
 .sig { text-align: center; padding: 6px 0 0; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
 .sig b { font-family: var(--f-display); font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
@@ -569,7 +610,7 @@ const S = {
   session: undefined, bid: null, subs: [],
   cards: [], votes: {}, moods: {}, roti: {}, actions: [],
   peers: [], profiles: {}, readOnly: false,
-  drafts: {}, editing: null, mergeSrc: null, setupMethod: "ssc", focus: "all", confirmReset: false,
+  drafts: {}, editing: null, mergeSrc: null, setupMethod: "ssc", focus: "all", composeCol: null, composePos: null, canvasW: 0, confirmReset: false,
   pendingVotes: null, voteQueue: Promise.resolve(), voteInflight: 0,
   seen: new Set(), cardsLoaded: false, lastPhase: null,
   sample: null, meta: {}, retros: [], retrosLoaded: false, viewPhase: null, prevActions: [], confirmDel: null, isOwner: false, holdUntil: 0, enterReq: false, enterBase: 0, entering: false, shownPh: undefined, bootAt: Date.now(),
@@ -805,7 +846,7 @@ function schedule() {
 
 function prepEnter(root) {
   [...root.children].forEach((el, i) => el.style.setProperty("--d", i));
-  root.querySelectorAll(".retros,.methods,.weather,.roti,.rank,.alist,.board,.notes,.groups,.sugg").forEach(c => {
+  root.querySelectorAll(".retros,.methods,.weather,.roti,.rank,.alist,.board,.notes,.groups,.sugg,.zchips").forEach(c => {
     if (!c.classList.contains("notes")) c.classList.add("stg");
     [...c.children].forEach((el, i) => el.style.setProperty("--s", Math.min(i, 10)));
   });
@@ -862,6 +903,8 @@ function render() {
   if (enter) { const m = $app.querySelector("main"); if (m) prepEnter(m); S.holdUntil = Date.now() + S.enterBase * 1000 + 1400; }
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { el.setSelectionRange(ss, se); } catch (_) {} } }
   if (S.cardsLoaded) S.cards.forEach(c => S.seen.add(c.id));
+  const wrap = $app.querySelector(".canvas-wrap");
+  if (wrap) { const w = Math.max(960, Math.floor(wrap.clientWidth)); if (Math.abs(w - (S.canvasW || 0)) > 4) { S.canvasW = w; schedule(); } }
   const ph = phase();
   if (S.lastPhase !== null && S.lastPhase >= 0 && ph !== S.lastPhase && PHASES[ph] && PHASES[ph].key === "roti") setTimeout(confetti, 900);
   S.lastPhase = ph;
@@ -1216,13 +1259,107 @@ function boardView(ph) {
       <div class="meter"><span class="track"><i style="width:${pct}%"></i></span>${doneN} / ${ppl.length} voted</div><span class="grow"></span>
       <button class="btn ${meDone ? "" : "primary"}" data-act="done" data-k="${doneKey}" ${S.room ? "" : "disabled"}>${meDone ? "Change my votes" : "I've voted"}</button></div>`;
   } else if (k === "reveal") {
-    status = `<div class="statusbar"><span class="meter">${plural(S.cards.length, "note")} on the wall. To group two notes about the same thing, tap “Group” on one, then “Group here” on the other.</span></div>`;
+    status = `<div class="statusbar"><span class="meter">${plural(S.cards.length, "note")} on the wall. Drag notes around freely, and drop one onto another to group them.</span></div>`;
   }
   return phaseHead(ph) + status + (k === "reveal" ? groupsPanel() : "") + boardScene(k);
 }
 
+/* ---------- whiteboard canvas ---------- */
+const NOTE_W = 150, SLOT_W = 162, SLOT_H = 100, LABEL_H = 60;
+function canvasW() { return Math.max(960, S.canvasW || Math.min(1300, (window.innerWidth || 1200) - 40)); }
+function sceneLayout(mk, W) {
+  const sc = SCENES[mk]; const rows = sc.areas.map(r => r.split(" "));
+  const fr = sc.cols === C3 ? [.36, .28, .36] : [1 / 3, 1 / 3, 1 / 3];
+  const P = 16, G = 14, H0 = Math.round(W * .6);
+  const wts = rows.map(r => r.every(a => a === "hero") ? .7 : 1), wsum = wts.reduce((a, b) => a + b, 0);
+  const innerW = W - 2 * P - 2 * G, innerH = H0 - 2 * P - (rows.length - 1) * G;
+  const colW = fr.map(f => f * innerW), colX = []; let x = P; colW.forEach((w, i) => { colX[i] = x; x += w + G; });
+  const rowH = wts.map(w => innerH * w / wsum), rowY = []; let y = P; rowH.forEach((h, i) => { rowY[i] = y; y += h + G; });
+  const rects = {};
+  rows.forEach((r, ri) => r.forEach((a, ci) => {
+    const R = { x: colX[ci], y: rowY[ri], w: colW[ci], h: rowH[ri] }, c = rects[a];
+    if (!c) rects[a] = R;
+    else { const x1 = Math.min(c.x, R.x), y1 = Math.min(c.y, R.y), x2 = Math.max(c.x + c.w, R.x + R.w), y2 = Math.max(c.y + c.h, R.y + R.h); rects[a] = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 }; }
+  }));
+  return { rects, H0, W };
+}
+const hashN = id => [...String(id)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+function slotPos(R, i, id) {
+  const cols = Math.max(1, Math.floor((R.w - 20 + (SLOT_W - NOTE_W)) / SLOT_W)), h = hashN(id);
+  return { x: R.x + 12 + (i % cols) * SLOT_W + (h % 9) - 4, y: R.y + LABEL_H + Math.floor(i / cols) * SLOT_H + ((h >> 4) % 9) - 4 };
+}
+function zoneAt(L, px, py) {
+  const keys = method().cols.map(c => c[0]);
+  for (const k of keys) { const R = L.rects[k]; if (R && px >= R.x && px <= R.x + R.w && py >= R.y && py <= R.y + R.h) return k; }
+  let best = keys[0], bd = Infinity;
+  for (const k of keys) { const R = L.rects[k]; if (!R) continue; const d = Math.hypot(px - (R.x + R.w / 2), py - (R.y + R.h / 2)); if (d < bd) { bd = d; best = k; } }
+  return best;
+}
+function notePositions(L) {
+  const pos = {}, perZone = {};
+  const tops = topCards().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  for (const c of tops) {
+    perZone[c.col] = (perZone[c.col] || 0) + 1;
+    if (typeof c.x === "number" && typeof c.y === "number") pos[c.id] = { x: c.x * L.W, y: c.y * L.W };
+    else { const R = L.rects[c.col] || Object.values(L.rects)[0]; pos[c.id] = slotPos(R, perZone[c.col] - 1, c.id); }
+  }
+  return pos;
+}
+
+function composer(k) {
+  if (!canWrite() || (k !== "write" && k !== "reveal")) return "";
+  const m = method(); if (!m.cols.some(c => c[0] === S.composeCol)) S.composeCol = m.cols[0][0];
+  const cur = m.cols.find(c => c[0] === S.composeCol);
+  return `<div class="composer"><div class="zchips" role="group" aria-label="Zone for the new note">${m.cols.map(([key, title], i) => `<button class="zchip ${key === S.composeCol ? "on" : ""}" style="--note:var(--n${i % 5 + 1})" data-act="compcol" data-col="${key}" aria-pressed="${key === S.composeCol}">${colIcon(key)}${esc(title)}</button>`).join("")}</div>
+    <div class="crow"><textarea id="compose" class="field" placeholder="A note for “${esc(cur[1])}”…" maxlength="500" data-compose="1">${draft("compose")}</textarea><button class="btn primary" data-act="composeadd">Stick it</button></div>
+    <span class="chint">Enter to stick it on the board · Shift+Enter for a new line · double-click anywhere on the drawing to stick a note right there</span></div>`;
+}
+
+function canvasNote(c, k, P, i) {
+  const mine = c.author === S.me, tilt = ((hashN(c.id) % 7) - 3) * .6;
+  const base = `left:${Math.round(P.x)}px;top:${Math.round(P.y)}px;--note:${noteVar(c.col)};--tilt:${tilt}deg;--s:${Math.min(i, 20)}`;
+  if (k === "write" && !mine) return `<div class="note cnote hidden static" style="${base}" aria-label="Hidden note"><div class="bars"><i style="width:88%"></i><i style="width:60%"></i></div><small>A teammate's note</small></div>`;
+  const kids = childrenOf(c.id);
+  const isNew = S.cardsLoaded && !S.seen.has(c.id);
+  const draggable = canWrite() && ((k === "write" && mine) || k === "reveal");
+  if (S.editing === c.id) {
+    const id = `edit-${c.id}`;
+    return `<article class="note cnote editing static" style="${base}"><textarea id="${id}" maxlength="500" data-edit="${c.id}">${draft(id, c.text)}</textarea>
+      <footer><span></span><span class="acts"><button class="nbtn" data-act="editcancel">Cancel</button><button class="nbtn strong" data-act="editsave" data-id="${c.id}">Save</button></span></footer></article>`;
+  }
+  let left = mine ? `<span class="tag">You</span>` : `<span></span>`, acts = "";
+  if ((k === "write" || k === "reveal") && mine && canWrite()) acts = `<button class="nbtn" data-act="edit" data-id="${c.id}" aria-label="Edit">Edit</button><button class="nbtn" data-act="del" data-id="${c.id}" aria-label="Delete">✕</button>`;
+  if (k === "vote") {
+    const mv = myVotes()[c.id] || 0, rest = (sess().votesPerPerson || 3) - votesUsed();
+    left = `<span class="votes"><button class="vbtn" data-act="vote" data-id="${c.id}" data-d="-1" aria-label="Remove a vote" ${mv > 0 && canWrite() ? "" : "disabled"}>−</button>
+      <span class="dots" aria-label="${plural(mv, "vote")}">${Array.from({ length: mv }, () => "<i></i>").join("")}</span>
+      <button class="vbtn" data-act="vote" data-id="${c.id}" data-d="1" aria-label="Add a vote" ${rest > 0 && canWrite() ? "" : "disabled"}>+</button></span>`;
+    acts = "";
+  }
+  const kidsH = kids.map(ch => `<div class="child"><p>${esc(ch.text)}</p>${k === "reveal" && canWrite() ? `<button class="nbtn" data-act="unmerge" data-id="${ch.id}" aria-label="Ungroup">↩</button>` : ""}</div>`).join("");
+  return `<article class="note cnote ${mine ? "mine" : ""} ${isNew ? "pop" : ""} ${draggable ? "" : "static"}" style="${base}" data-id="${c.id}" ${draggable ? 'data-drag="1"' : ""}>
+    ${c.theme && kids.length ? `<span class="theme">${esc(c.theme)}</span>` : ""}<p class="txt">${esc(c.text)}</p>${kidsH}
+    <footer>${left}<span class="acts">${acts}</span></footer></article>`;
+}
+
 function boardScene(k) {
   const mk = sess().method, sc = SCENES[mk], m = method();
+  if (sc) {
+    const W = canvasW(), L = sceneLayout(mk, W), pos = notePositions(L);
+    let maxB = L.H0;
+    for (const c of topCards()) { const p = pos[c.id]; if (p) maxB = Math.max(maxB, p.y + 110 + childrenOf(c.id).length * 30 + 20); }
+    const H = Math.round(maxB);
+    const hero = L.rects.hero;
+    const zones = m.cols.map(([key, title, hint], i) => { const R = L.rects[key]; if (!R) return "";
+      const n = S.cards.filter(c => c.col === key).length;
+      return `<div class="zone ${S.composeCol === key && (k === "write" || k === "reveal") ? "on" : ""}" data-z="${key}" style="left:${R.x}px;top:${R.y}px;width:${R.w}px;height:${R.h}px;--note:var(--n${i % 5 + 1});--s:${i}">
+        <div class="zlabel"><span class="cicon" aria-hidden="true">${colIcon(key)}</span><div><h3>${esc(title)}</h3><p>${esc(hint)}</p></div><span class="count">${n}</span>${canWrite() && (k === "write" || k === "reveal") ? `<button class="zadd" data-act="compcol" data-col="${key}" data-focus="1" aria-label="Add a note to ${esc(title)}">+</button>` : ""}</div></div>`; }).join("");
+    const notes = topCards().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)).map((c, i) => pos[c.id] ? canvasNote(c, k, pos[c.id], i) : "").join("");
+    return composer(k) + `<div class="canvas-wrap"><div class="canvas board-canvas bg-${sc.bg}" style="width:${W}px;height:${H}px" data-w="${W}">
+      ${(DECO[sc.bg] || (() => ""))()}
+      ${hero ? `<div class="zhero" style="left:${hero.x}px;top:${hero.y}px;width:${hero.w}px;height:${hero.h}px">${ILL[mk] || ""}<div class="hname">${esc(m.name)}</div><div class="hsub">${esc(sc.sub)}</div></div>` : ""}
+      ${zones}${notes}</div></div>`;
+  }
   if (!sc) return `<div class="board">${m.cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
   const areas = sc.areas.map(r => "'" + r.split(" ").map(a => a === "hero" ? "hero" : "z-" + a).join(" ") + "'").join(" ");
   return `<div class="board scene bg-${sc.bg}" style="grid-template-columns:${sc.cols};grid-template-areas:${areas}">${(DECO[sc.bg] || (() => ""))()}
@@ -1427,6 +1564,19 @@ async function setSession(patch) {
   return write(() => S.db.doc("retros/" + S.bid).set(next));
 }
 
+async function composeAdd() {
+  const text = (S.drafts["compose"] || "").trim();
+  if (!text || !canWrite()) { document.getElementById("compose")?.focus(); return; }
+  const col = S.composeCol || method().cols[0][0];
+  const L = sceneLayout(sess().method, canvasW());
+  let P = S.composePos;
+  if (!P) { const R = L.rects[col]; const n = S.cards.filter(c => c.col === col && (!c.parent)).length; P = slotPos(R, n, String(Date.now())); }
+  S.drafts["compose"] = ""; S.composePos = null; schedule();
+  const ok = await write(() => S.db.collection(path("cards")).add({ text, col, author: S.me, createdAt: Date.now(), x: +(P.x / L.W).toFixed(4), y: +(P.y / L.W).toFixed(4) }));
+  if (!ok) { S.drafts["compose"] = text; schedule(); }
+  setTimeout(() => document.getElementById("compose")?.focus({ preventScroll: true }), 30);
+}
+
 async function addCard(col) {
   const id = `new-${col}`;
   const text = (S.drafts[id] || "").trim();
@@ -1472,6 +1622,7 @@ document.addEventListener("change", e => { const t = e.target; if (t && t.id ===
 document.addEventListener("keydown", e => {
   const t = e.target;
   if (e.key !== "Enter" || e.shiftKey || e.isComposing) return;
+  if (t.dataset && t.dataset.compose) { e.preventDefault(); composeAdd(); return; }
   if (t.dataset && t.dataset.add) { e.preventDefault(); addCard(t.dataset.add); }
   else if (t.dataset && t.dataset.edit) { e.preventDefault(); document.querySelector(`[data-act="editsave"][data-id="${t.dataset.edit}"]`)?.click(); }
   else if (t.id === "act-text" || t.id === "act-owner" || t.id === "act-due") { e.preventDefault(); document.querySelector('[data-act="addaction"]')?.click(); }
@@ -1484,6 +1635,8 @@ document.addEventListener("click", async e => {
   if (act !== "delretro" && S.confirmDel) { S.confirmDel = null; schedule(); }
   switch (act) {
     case "pick": S.setupMethod = el.dataset.m; schedule(); break;
+    case "compcol": S.composeCol = el.dataset.col; S.composePos = null; schedule(); if (el.dataset.focus) setTimeout(() => { const t = document.getElementById("compose"); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: "center", behavior: "smooth" }); } }, 40); break;
+    case "composeadd": composeAdd(); break;
     case "focusf": {
       S.focus = el.dataset.f;
       const fits = Object.entries(METHODS).filter(([, v]) => S.focus === "all" || (v.tags || []).includes(S.focus)).sort((a, b) => S.focus === "all" ? 0 : a[1].tags.indexOf(S.focus) - b[1].tags.indexOf(S.focus));
@@ -1602,6 +1755,73 @@ document.addEventListener("click", async e => {
     }
   }
 });
+
+/* ---------- drag & drop on the canvas ---------- */
+let drag = null;
+document.addEventListener("pointerdown", e => {
+  const n = e.target.closest(".cnote[data-drag]");
+  if (!n || e.button > 0 || e.target.closest("button,textarea,input,a")) return;
+  const canvas = n.closest(".canvas"); if (!canvas) return;
+  const cr = canvas.getBoundingClientRect(), nr = n.getBoundingClientRect();
+  drag = { id: n.dataset.id, el: n, canvas, cr, ox: e.clientX - nr.left, oy: e.clientY - nr.top, sx: e.clientX, sy: e.clientY, moved: false, pid: e.pointerId, target: null };
+  S.holdUntil = Date.now() + 10 * 60e3;
+});
+document.addEventListener("pointermove", e => {
+  if (!drag || e.pointerId !== drag.pid) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;
+  if (!drag.moved) { drag.moved = true; drag.el.classList.add("dragging"); try { drag.el.setPointerCapture(drag.pid); } catch (_) {} }
+  e.preventDefault();
+  const cr = drag.canvas.getBoundingClientRect();
+  const x = Math.max(0, Math.min(cr.width - NOTE_W, e.clientX - cr.left - drag.ox)), y = Math.max(0, e.clientY - cr.top - drag.oy);
+  drag.el.style.left = x + "px"; drag.el.style.top = y + "px"; drag.x = x; drag.y = y;
+  const L = sceneLayout(sess().method, +drag.canvas.dataset.w || canvasW());
+  const z = zoneAt(L, x + NOTE_W / 2, y + 30);
+  drag.canvas.querySelectorAll(".zone").forEach(el => el.classList.toggle("on", el.dataset.z === z));
+  let tgt = null;
+  if (phase() >= 0 && PHASES[phase()].key === "reveal") {
+    drag.el.style.pointerEvents = "none";
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    drag.el.style.pointerEvents = "";
+    const t = under && under.closest(".cnote[data-id]");
+    if (t && t.dataset.id !== drag.id) tgt = t;
+  }
+  if (drag.target && drag.target !== tgt) drag.target.classList.remove("droptarget");
+  if (tgt) tgt.classList.add("droptarget");
+  drag.target = tgt;
+}, { passive: false });
+async function endDrag(e) {
+  if (!drag || (e && e.pointerId !== drag.pid)) return;
+  const d = drag; drag = null;
+  if (!d.moved) { S.holdUntil = 0; return; }
+  const W = +d.canvas.dataset.w || canvasW(), L = sceneLayout(sess().method, W);
+  if (d.target) {
+    const tid = d.target.dataset.id;
+    S.cards = S.cards.map(c => c.id === d.id || c.parent === d.id ? { ...c, parent: tid } : c);
+    S.holdUntil = 0; schedule();
+    for (const ch of S.cards.filter(c => c.parent === tid && c.id !== d.id)) await write(() => S.db.doc(path("cards/" + ch.id)).update({ parent: tid }));
+    await write(() => S.db.doc(path("cards/" + d.id)).update({ parent: tid }));
+    toast("Grouped.");
+    return;
+  }
+  const col = zoneAt(L, d.x + NOTE_W / 2, d.y + 30);
+  const patch = { x: +(d.x / W).toFixed(4), y: +(d.y / W).toFixed(4), col };
+  S.cards = S.cards.map(c => c.id === d.id ? { ...c, ...patch } : c);
+  S.holdUntil = 0; schedule();
+  write(() => S.db.doc(path("cards/" + d.id)).update(patch));
+}
+document.addEventListener("pointerup", endDrag);
+document.addEventListener("pointercancel", e => { if (drag && e.pointerId === drag.pid) { drag = null; S.holdUntil = 0; schedule(); } });
+document.addEventListener("dblclick", e => {
+  const canvas = e.target.closest(".canvas"); if (!canvas || e.target.closest(".cnote,button,textarea")) return;
+  const k = phase() >= 0 ? PHASES[phase()].key : ""; if (!canWrite() || (k !== "write" && k !== "reveal")) return;
+  const cr = canvas.getBoundingClientRect(), W = +canvas.dataset.w || canvasW();
+  const x = Math.max(0, Math.min(W - NOTE_W, e.clientX - cr.left - NOTE_W / 2)), y = Math.max(0, e.clientY - cr.top - 20);
+  S.composeCol = zoneAt(sceneLayout(sess().method, W), x + NOTE_W / 2, y + 30);
+  S.composePos = { x, y }; schedule();
+  setTimeout(() => { const t = document.getElementById("compose"); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: "center", behavior: "smooth" }); } }, 40);
+  toast("Write your note, it will be stuck where you double-clicked.");
+});
+window.addEventListener("resize", () => { if (document.querySelector(".canvas-wrap")) schedule(); });
 
 /* ---------- data ---------- */
 function openRetro(bid, data) {
