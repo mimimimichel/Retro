@@ -9,6 +9,7 @@ A live, interactive sprint retrospective board, one retro per sprint.
 - Shared timer, who's online, copyable Markdown summary
 - Whiteboard boards: each format is a full illustrated scene (sky, sea, road, meadow, night…) with the drawing in the middle; sticky notes are stuck right on it, dragged anywhere (the zone follows where you drop), dropped onto each other to group, or added with a double-click on the drawing
 - Hand-drawn illustrations for every format and step, drawn in with motion
+- Full screen button in the header (where the browser allows it)
 - Focus mode while writing: slim header, compact step title, facilitator controls tucked into a small pill
 - Signed "made by MichaelSoft"
 - Intro animation, full-screen step transitions, staggered screen entrances, join notifications (all off with reduced motion)

@@ -480,6 +480,10 @@ body.focusmode .focus-tip { display: inline-flex; align-items: center; gap: 6px;
 .sprint-field span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--muted); pointer-events: none; }
 .sprint-field input { padding-left: 62px; font-weight: 800; font-family: var(--f-display); font-size: 1.1rem; }
 .backlink { border: 0; border-radius: 999px; padding: 5px 12px; font-weight: 700; font-size: .8rem; color: var(--band-ink); background: color-mix(in srgb, var(--band-ink) 12%, transparent); white-space: nowrap; }
+.fsbtn { border: 0; border-radius: 999px; padding: 5px 12px 5px 9px; font-weight: 700; font-size: .8rem; color: var(--band-ink); background: color-mix(in srgb, var(--band-ink) 12%, transparent); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fsbtn:hover { background: color-mix(in srgb, var(--band-ink) 22%, transparent); }
+.fsbtn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 600px) { .fsbtn span { display: none; } .fsbtn { padding: 6px; } }
 .backlink:hover { background: color-mix(in srgb, var(--band-ink) 22%, transparent); }
 .followup .alist li { box-shadow: none; border: 2px solid var(--line); }
 .banner .btn { margin-left: 8px; }
@@ -951,6 +955,17 @@ function view() {
   return header() + `<main class="wrap${S.entering ? " enter" : ""}" style="--base:${S.enterBase || 0}s">${banners()}${body}<footer class="sig">Retro Live · made by <b>Michael<i>Soft</i></b></footer></main>` + facBar();
 }
 
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+const isFull = () => !!fsEl();
+const fsAvailable = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+async function toggleFullscreen() {
+  try {
+    if (isFull()) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else { const el = document.documentElement; await (el.requestFullscreen || el.webkitRequestFullscreen).call(el, { navigationUI: "hide" }); }
+  } catch (_) { toast("Your browser blocked full screen here. Try F11, or Ctrl+Cmd+F on a Mac."); }
+}
+["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => schedule()));
+
 function header() {
   const s = sess(); const ph = phase();
   const ppl = participants();
@@ -972,6 +987,9 @@ function header() {
     ${S.bid ? `<button class="backlink" data-act="home">← All retros</button>` : ""}
     ${ph >= 0 && !isDone() ? `<div id="timer" class="timer idle" role="timer" aria-live="off">--:--</div>` : ""}
     <div class="people"><span class="avs">${avs}</span><span class="n">${ppl.length} online</span></div>
+    ${fsAvailable() ? `<button class="fsbtn" data-act="fullscreen" aria-pressed="${isFull()}" title="${isFull() ? "Exit full screen (Esc)" : "Full screen"}">${isFull()
+      ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6"/></svg><span>Exit full screen</span>`
+      : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg><span>Full screen</span>`}</button>` : ""}
     ${steps}
   </div>${ph >= 0 && !isDone() ? `<div class="tbar"><i id="tbar"></i></div>` : ""}</header>`;
 }
@@ -1660,6 +1678,7 @@ document.addEventListener("click", async e => {
     case "pick": S.setupMethod = el.dataset.m; schedule(); break;
     case "compcol": S.composeCol = el.dataset.col; S.composePos = null; schedule(); if (el.dataset.focus) setTimeout(() => { const t = document.getElementById("compose"); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: "center", behavior: "smooth" }); } }, 40); break;
     case "composeadd": composeAdd(); break;
+    case "fullscreen": toggleFullscreen(); break;
     case "facopen": S.facOpen = true; schedule(); break;
     case "facclose": S.facOpen = false; schedule(); break;
     case "focusf": {
