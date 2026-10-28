@@ -408,6 +408,22 @@ main.enter .canvas .cnote { animation: noteIn .6s cubic-bezier(.2, 1.4, .4, 1) b
 main.enter .canvas .zone { animation: rise .6s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--base) + 150ms + var(--s, 0) * 70ms); }
 @media (prefers-reduced-motion: reduce) { main.enter .canvas .cnote, main.enter .canvas .zone { animation: none; } }
 
+/* Focus mode while people write: quieter chrome, more room for the board */
+body.focusmode .top .steps, body.focusmode .brand small, body.focusmode .backlink, body.focusmode .tbar { display: none; }
+body.focusmode .top .wrap { padding-block: 8px; }
+body.focusmode .logo { transform: scale(.8); }
+body.focusmode .brand h1 { font-size: 1.05rem; }
+body.focusmode main.wrap { gap: 14px; padding-top: 16px; }
+body.focusmode .phase-head .bignum, body.focusmode .phase-head .pill, body.focusmode .phase-head p, body.focusmode .phase-head .eyebrow { display: none; }
+body.focusmode .phase-head h2 { font-size: 1.35rem; }
+body.focusmode .sig, body.focusmode .chint { display: none; }
+body.focusmode .statusbar { box-shadow: none; background: color-mix(in srgb, var(--surface) 70%, transparent); padding-block: 5px; }
+.fac.mini { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); transform: none; width: auto; border-radius: 999px; }
+.fac.mini .in { padding: 7px 8px 7px 16px; flex-wrap: nowrap; }
+.focus-tip { display: none; }
+body.focusmode .focus-tip { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); }
+@media (max-width: 600px) { body.focusmode .focus-tip { display: none; } }
+
 /* Signature */
 .sig { text-align: center; padding: 6px 0 0; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
 .sig b { font-family: var(--f-display); font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
@@ -889,6 +905,7 @@ function render() {
   let fid = null, ss = 0, se = 0;
   if (a && a.id && (a.tagName === "TEXTAREA" || a.tagName === "INPUT")) { fid = a.id; try { ss = a.selectionStart; se = a.selectionEnd; } catch (_) {} }
   $app.innerHTML = view();
+  document.body.classList.toggle("focusmode", isFocus());
   if (enter) { const m = $app.querySelector("main"); if (m) prepEnter(m); S.holdUntil = Date.now() + S.enterBase * 1000 + 1400; }
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { el.setSelectionRange(ss, se); } catch (_) {} } }
   if (S.cardsLoaded) S.cards.forEach(c => S.seen.add(c.id));
@@ -1240,7 +1257,7 @@ function boardView(ph) {
   if (k === "write") {
     const total = S.cards.length, mineN = S.cards.filter(c => c.author === S.me).length;
     status = `<div class="statusbar"><div class="meter"><span class="track"><i style="width:${pct}%"></i></span>${doneN} / ${ppl.length} done</div>
-      <span class="meter">${plural(total, "note")} so far, ${mineN} from you</span><span class="grow"></span>
+      <span class="meter">${plural(total, "note")} so far, ${mineN} from you</span><span class="focus-tip">Focus mode: everything else is tucked away while you write</span><span class="grow"></span>
       <button class="btn ${meDone ? "" : "primary"}" data-act="done" data-k="${doneKey}" ${S.room ? "" : "disabled"}>${meDone ? "Keep writing" : "I'm done"}</button></div>`;
   } else if (k === "vote") {
     const max = sess().votesPerPerson || 3, used = votesUsed();
@@ -1492,11 +1509,16 @@ function summary() {
   return lines.join("\n");
 }
 
+const isFocus = () => !!(S.bid && sess() && !isDone() && phase() >= 0 && PHASES[phase()].key === "write");
 function facBar() {
   const ph = phase();
   if (ph < 0 || !isFac()) return "";
   const k = PHASES[ph].key;
   const timerOn = !!sess().timerEnd;
+  if (isFocus() && !S.facOpen) return `<div class="fac mini" role="region" aria-label="Facilitator controls"><div class="in">
+    <span class="lab">Writing</span>
+    <button class="btn primary sm" data-act="next">Next: ${PHASES[ph + 1].label} →</button>
+    <button class="btn sm" data-act="facopen" aria-expanded="false">More</button></div></div>`;
   return `<div class="fac" role="region" aria-label="Facilitator controls"><div class="in">
     <span class="lab">Facilitate</span>
     <button class="btn sm" data-act="prev" ${ph === 0 ? "disabled" : ""}>← Back</button>
@@ -1506,6 +1528,7 @@ function facBar() {
     ${[2, 5, 10].map(m => `<button class="btn sm" data-act="timer" data-m="${m}">${m} min</button>`).join("")}
     ${timerOn ? `<button class="btn sm" data-act="timer" data-m="1" data-add="1">+1</button><button class="btn sm" data-act="timerstop">Stop</button>` : ""}
     <span class="grow"></span>
+    ${isFocus() ? `<button class="btn sm" data-act="facclose" aria-expanded="true">Less</button>` : ""}
     <button class="btn sm ${S.confirmReset ? "danger" : "ghost"}" data-act="reset">${S.confirmReset ? "Confirm: close retro" : "Close retro"}</button>
   </div></div>`;
 }
@@ -1577,7 +1600,7 @@ async function addCard(col) {
 
 function goPhase(i) {
   i = Math.max(0, Math.min(PHASES.length - 1, i));
-  S.mergeSrc = null;
+  S.mergeSrc = null; S.facOpen = false;
   setSession({ phase: i, timerEnd: null, timerDur: null });
 }
 
@@ -1626,6 +1649,8 @@ document.addEventListener("click", async e => {
     case "pick": S.setupMethod = el.dataset.m; schedule(); break;
     case "compcol": S.composeCol = el.dataset.col; S.composePos = null; schedule(); if (el.dataset.focus) setTimeout(() => { const t = document.getElementById("compose"); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: "center", behavior: "smooth" }); } }, 40); break;
     case "composeadd": composeAdd(); break;
+    case "facopen": S.facOpen = true; schedule(); break;
+    case "facclose": S.facOpen = false; schedule(); break;
     case "focusf": {
       S.focus = el.dataset.f;
       const fits = Object.entries(METHODS).filter(([, v]) => S.focus === "all" || (v.tags || []).includes(S.focus)).sort((a, b) => S.focus === "all" ? 0 : a[1].tags.indexOf(S.focus) - b[1].tags.indexOf(S.focus));
