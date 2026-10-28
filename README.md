@@ -4,7 +4,7 @@ A live, interactive sprint retrospective board, one retro per sprint.
 
 - Retro library: join the live retro, browse past sprints (stats, notes, actions, AI report), start a new one by sprint number
 - Follow-up on the previous sprint's actions at check-in
-- 7 formats: Start·Stop·Continue, Mad·Sad·Glad, 4 Ls, Sailboat, Starfish, DAKI, Three Little Pigs
+- 18 formats, filtered by focus (short on time, feelings, team, ways of working, goals, risks, quality, customers, wins): Start·Stop·Continue, Mad·Sad·Glad, 4 Ls, Sailboat, Starfish, DAKI, Three Little Pigs, Plus/Delta, Rose·Thorn·Bud, KALM, Team health check, Kudos wall, Highs & Lows, Hot air balloon, Speed car, Pre-mortem, Tech debt radar, Customer value
 - 7 steps: Weather → Write (hidden notes) → Reveal & group → Dot voting → Discuss → Actions → ROTI
 - Shared timer, who's online, copyable Markdown summary
 - Hand-drawn illustrations for every format and step, drawn in with motion

@@ -327,6 +327,15 @@ label.lbl { display: block; font-size: .8rem; font-weight: 700; color: var(--mut
 .report p { margin: 4px 0; }
 .report.live::after { content: "▍"; color: var(--pop); animation: blink 1s infinite; }
 
+/* Format focus filter */
+.frow { display: flex; flex-wrap: wrap; gap: 8px; }
+.fchip { border: 2px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: .88rem; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; transition: transform .12s ease, border-color .12s ease; }
+.fchip:hover { border-color: var(--accent); transform: translateY(-1px); }
+.fchip.on { background: var(--ink); color: var(--wall); border-color: var(--ink); }
+.fchip span { font-family: var(--f-mono); font-size: .74rem; opacity: .6; font-variant-numeric: tabular-nums; }
+.mfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; justify-content: space-between; }
+.mtime { font-size: .74rem; font-weight: 800; color: var(--accent); background: var(--accent-soft); padding: 1px 9px; border-radius: 999px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
 /* Retro library */
 .section-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; }
 .section-h h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 800; letter-spacing: -.02em; }
@@ -436,21 +445,52 @@ main.enter .ill > *, main.enter .ill g > *, .curtain.in .ill > *, .curtain.in .i
 "use strict";
 
 const METHODS = {
-  ssc: { name: "Start · Stop · Continue", desc: "The classic: what to start doing, what to stop, and what to keep.", best: "Great for a short retro or a new team",
+  ssc: { tags: ["process", "quick"], time: 30, name: "Start · Stop · Continue", desc: "The classic: what to start doing, what to stop, and what to keep.", best: "Great for a short retro or a new team",
     cols: [["start","Start","Things we should try"],["stop","Stop","Things that cost more than they give"],["cont","Continue","Things that work, let's keep them"]] },
-  msg: { name: "Mad · Sad · Glad", desc: "Start from how the sprint felt to surface what really matters.", best: "Great after a stressful sprint",
+  msg: { tags: ["feelings", "team"], time: 45, name: "Mad · Sad · Glad", desc: "Start from how the sprint felt to surface what really matters.", best: "Great after a stressful sprint",
     cols: [["mad","Mad","What frustrated or blocked me"],["sad","Sad","What disappointed me"],["glad","Glad","What made me happy"]] },
-  fourl: { name: "The 4 Ls", desc: "Liked, Learned, Lacked, Longed for: a full lap around the sprint.", best: "Great at the end of a release",
+  fourl: { tags: ["wins", "process"], time: 60, name: "The 4 Ls", desc: "Liked, Learned, Lacked, Longed for: a full lap around the sprint.", best: "Great at the end of a release",
     cols: [["liked","Liked","What I enjoyed"],["learned","Learned","What I discovered"],["lacked","Lacked","What we were missing"],["longed","Longed for","What I wish we had"]] },
-  sailboat: { name: "Sailboat", desc: "Our team is a boat: what pushes us, what holds us back, what's ahead.", best: "Great for stepping back on the goal",
+  sailboat: { tags: ["goals", "risks"], time: 45, name: "Sailboat", desc: "Our team is a boat: what pushes us, what holds us back, what's ahead.", best: "Great for stepping back on the goal",
     cols: [["wind","Wind","What moves us forward"],["anchor","Anchors","What slows us down"],["rocks","Rocks","Risks ahead of us"],["island","Island","The goal we're sailing to"]] },
-  starfish: { name: "Starfish", desc: "A finer-grained Start/Stop/Continue, with More of and Less of.", best: "Great for a mature team fine-tuning",
+  starfish: { tags: ["process"], time: 60, name: "Starfish", desc: "A finer-grained Start/Stop/Continue, with More of and Less of.", best: "Great for a mature team fine-tuning",
     cols: [["start","Start","New things to try"],["stop","Stop","Things to drop"],["keep","Keep","Keep as it is"],["more","More of","Do this more"],["less","Less of","Do this less"]] },
-  daki: { name: "DAKI", desc: "Drop, Add, Keep, Improve: sort through the team's practices.", best: "Great for reviewing the process",
+  daki: { tags: ["process"], time: 45, name: "DAKI", desc: "Drop, Add, Keep, Improve: sort through the team's practices.", best: "Great for reviewing the process",
     cols: [["drop","Drop","What we stop"],["add","Add","What we bring in"],["keep","Keep","What works well"],["improve","Improve","What could be better"]] },
-  pigs: { name: "Three Little Pigs", desc: "Straw, sticks, bricks: what's fragile, what needs work, what's rock solid?", best: "Great for quality and tech debt",
+  pigs: { tags: ["quality", "risks"], time: 45, name: "Three Little Pigs", desc: "Straw, sticks, bricks: what's fragile, what needs work, what's rock solid?", best: "Great for quality and tech debt",
     cols: [["straw","House of straw","Falls over at the first puff"],["wood","House of sticks","Holds up, but needs reinforcing"],["brick","House of bricks","Rock solid, we can rely on it"]] },
 };
+
+Object.assign(METHODS, {
+  plusdelta: { tags: ["quick", "process"], time: 20, name: "Plus / Delta", desc: "Two columns, straight to the point: what worked and what we'd change.", best: "Great when you only have 20 minutes",
+    cols: [["plus","Plus","What worked"],["delta","Delta","What we'd change"]] },
+  rose: { tags: ["quick", "feelings", "wins"], time: 30, name: "Rose, Thorn, Bud", desc: "A win, a pain point and an opportunity: balanced and fast.", best: "Great for a quick, balanced pulse",
+    cols: [["rose","Rose","A win or a highlight"],["thorn","Thorn","A pain point"],["bud","Bud","An idea about to bloom"]] },
+  kalm: { tags: ["process"], time: 45, name: "KALM", desc: "Keep, Add, More, Less: fine-tune what the team already does.", best: "Great for adjusting practices without a revolution",
+    cols: [["keep","Keep","Works well, don't change it"],["add","Add","New ideas to bring in"],["more","More","Do this more"],["less","Less","Do this less"]] },
+  health: { tags: ["team", "feelings"], time: 40, name: "Team health check", desc: "How we work together: energy, trust and communication.", best: "Great when the team feels tense or tired",
+    cols: [["energy","Energy","What gives or drains energy"],["trust","Trust & safety","Can we speak up freely?"],["comms","Communication","What gets lost between us"],["try","One thing to try","A small change for us"]] },
+  kudos: { tags: ["wins", "team"], time: 25, name: "Kudos wall", desc: "Thank each other and celebrate before improving anything.", best: "Great after a big delivery or a hard sprint",
+    cols: [["thanks","Thank you","Someone who helped me"],["proud","Proud of","Something we pulled off"],["learnt","Learned from","Something a teammate taught me"]] },
+  highs: { tags: ["feelings", "wins"], time: 45, name: "Highs & Lows", desc: "Replay the sprint as a story: peaks, dips and turning points.", best: "Great for a long or eventful sprint",
+    cols: [["high","Highs","Best moments"],["low","Lows","Hardest moments"],["turn","Turning points","When things changed"]] },
+  balloon: { tags: ["goals", "risks"], time: 45, name: "Hot air balloon", desc: "What lifts us, what weighs us down, the storms ahead and the clear sky we aim for.", best: "Great before a new milestone",
+    cols: [["air","Hot air","What lifts us up"],["sand","Sandbags","What weighs us down"],["storm","Storms","Risks on the horizon"],["sky","Clear skies","Where we want to be"]] },
+  speedcar: { tags: ["goals", "process", "risks"], time: 45, name: "Speed car", desc: "An engine, a parachute, an abyss and a bridge: speed versus obstacles.", best: "Great when velocity is the topic",
+    cols: [["engine","Engine","What makes us go fast"],["parachute","Parachute","What slows us down"],["abyss","Abyss","Dangers ahead"],["bridge","Bridge","How we get across"]] },
+  premortem: { tags: ["risks", "quality"], time: 45, name: "Pre-mortem", desc: "Imagine the next sprint failed. Why? Spot the risks before they happen.", best: "Great before a release or a deadline",
+    cols: [["fail","It failed because…","Imagine the worst"],["signs","Early signs","What we'd notice first"],["prevent","Prevention","What we do now to avoid it"]] },
+  techdebt: { tags: ["quality"], time: 45, name: "Tech debt radar", desc: "Map code and tooling pains: what slows us, what scares us, what's cheap to fix.", best: "Great for deciding what to clean up next",
+    cols: [["slow","Slowing us down","Daily friction"],["scary","Scary to touch","Fragile areas"],["quickwin","Quick wins","Cheap to fix"],["invest","Worth investing","Bigger bets that pay off"]] },
+  value: { tags: ["customer", "goals"], time: 45, name: "Customer value", desc: "Look at the sprint from the user's side: what we shipped versus what they got.", best: "Great when the team drifts away from users",
+    cols: [["delivered","Delivered value","What users actually got"],["missed","Missed value","What fell short"],["feedback","What we heard","Customer and stakeholder feedback"],["bet","Next bet","What to try for them"]] },
+});
+
+const FOCUS = [
+  ["all", "Everything"], ["quick", "Short on time"], ["feelings", "Feelings & morale"], ["team", "Team & collaboration"],
+  ["process", "Ways of working"], ["goals", "Goals & direction"], ["risks", "Risks ahead"], ["quality", "Quality & tech debt"],
+  ["customer", "Customers & value"], ["wins", "Celebrate wins"],
+];
 
 const PHASES = [
   { key: "checkin", label: "Weather", title: "What's the team weather?", hint: "Everyone picks the weather that sums up their sprint. Answers are anonymous." },
@@ -470,7 +510,7 @@ const S = {
   session: undefined, bid: null, subs: [],
   cards: [], votes: {}, moods: {}, roti: {}, actions: [],
   peers: [], profiles: {}, readOnly: false,
-  drafts: {}, editing: null, mergeSrc: null, setupMethod: "ssc", confirmReset: false,
+  drafts: {}, editing: null, mergeSrc: null, setupMethod: "ssc", focus: "all", confirmReset: false,
   pendingVotes: null, voteQueue: Promise.resolve(), voteInflight: 0,
   seen: new Set(), cardsLoaded: false, lastPhase: null,
   sample: null, meta: {}, retros: [], retrosLoaded: false, viewPhase: null, prevActions: [], confirmDel: null, isOwner: false, holdUntil: 0, enterReq: false, enterBase: 0, entering: false, shownPh: undefined, bootAt: Date.now(),
@@ -495,6 +535,19 @@ const ILL = {
   actions: svg(`<rect x="30" y="12" width="60" height="74" rx="6" class="fw k"/><rect x="46" y="6" width="28" height="12" rx="4" class="f5 k"/><path d="M40 34l5 5 9-9M40 52l5 5 9-9M40 70l5 5 9-9" class="k kg"/><path d="M62 36h18M62 54h18M62 72h12" class="k t"/>`, "pill"),
   roti: svg(`<path d="M40 20H28a10 10 0 0 0 12 16M80 20h12a10 10 0 0 1-12 16" class="k"/><path d="M40 12h40v22a20 20 0 0 1-40 0z" class="f1 k"/><path d="M60 54v12" class="k"/><rect x="44" y="66" width="32" height="12" rx="3" class="f5 k"/><path d="M20 10l3 6 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" class="fp k t"/><path d="M100 48l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1z" class="f2 k t"/>`, "pill"),
 };
+Object.assign(ILL, {
+  plusdelta: svg(`<circle cx="36" cy="46" r="24" class="f3 k"/><path d="M36 34v24M24 46h24" class="k"/><path d="M84 20l27 48H57z" class="f4 k"/>`),
+  rose: svg(`<path d="M60 88V44" class="k kg"/><path d="M60 58q18 0 28 4" class="k kg"/><path d="M60 68q-14-2-18-14q14 0 18 10" class="f3 k"/><path d="M60 76l7-5" class="k"/><circle cx="60" cy="30" r="17" class="f2 k"/><path d="M51 30q9-13 18 0q-9 11-18 0" class="k t"/><path d="M92 62q-9-14 0-27q9 13 0 27z" class="f3 k"/>`),
+  kalm: svg(`<path d="M30 12v66M60 12v66M90 12v66" class="k"/><rect x="20" y="44" width="20" height="13" rx="5" class="f1 k"/><rect x="50" y="22" width="20" height="13" rx="5" class="f3 k"/><rect x="80" y="58" width="20" height="13" rx="5" class="f2 k"/>`),
+  health: svg(`<path d="M60 82C30 62 14 46 14 30a18 18 0 0 1 46-10 18 18 0 0 1 46 10c0 16-16 32-46 52z" class="f2 k"/><path d="M22 44h20l6-12 10 24 8-16 6 4h26" class="k"/>`),
+  kudos: svg(`<path d="M40 6h13l10 28H52z" class="f2 k"/><path d="M80 6H67L57 34h11z" class="f4 k"/><circle cx="60" cy="56" r="23" class="f1 k"/><path d="M60 43l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z" class="fw k t"/>`),
+  highs: svg(`<path d="M8 82h104" class="k t"/><path d="M10 68 28 40 44 56 62 16 80 62 96 34 110 46" class="k ka"/><circle cx="62" cy="16" r="6" class="f1 k"/><circle cx="80" cy="62" r="6" class="f2 k"/><circle cx="28" cy="40" r="5" class="f3 k"/>`),
+  balloon: svg(`<path d="M60 6c20 0 32 14 32 30 0 16-16 28-22 36H50C44 64 28 52 28 36 28 20 40 6 60 6z" class="f2 k"/><path d="M60 6c-8 10-10 44-10 66M60 6c8 10 10 44 10 66" class="k t"/><path d="M50 72l2 7M70 72l-2 7" class="k"/><rect x="50" y="78" width="20" height="10" rx="2" class="f1 k"/>`),
+  speedcar: svg(`<path d="M4 84h112" class="k t"/><path d="M12 68V56l16-4 12-16h34l16 16 18 4v12z" class="f4 k"/><path d="M44 40h12v12H34z" class="fw k"/><path d="M62 40h12l12 12H62z" class="fw k"/><circle cx="34" cy="70" r="9" class="fw k"/><circle cx="88" cy="70" r="9" class="fw k"/><path d="M2 48h10M0 58h8" class="k t"/>`),
+  premortem: svg(`<circle cx="60" cy="40" r="28" class="f5 k"/><path d="M45 29q6-10 16-12" class="k t"/><path d="M60 33l3 6 7 1-5 4 1 7-6-3-6 3 1-7-5-4 7-1z" class="fw k t"/><path d="M36 82h48l-7-14H43z" class="f1 k"/>`),
+  techdebt: svg(`<circle cx="60" cy="46" r="36" class="fw k"/><path d="M60 46L89 25A36 36 0 0 1 96 46z" class="f3"/><circle cx="60" cy="46" r="22" class="k t"/><circle cx="60" cy="46" r="8" class="k t"/><path d="M60 46L89 25" class="k ka"/><circle cx="80" cy="58" r="4.5" class="fp k"/><circle cx="44" cy="30" r="4.5" class="f1 k"/><circle cx="40" cy="62" r="4.5" class="f2 k"/>`),
+  value: svg(`<circle cx="52" cy="48" r="34" class="f2 k"/><circle cx="52" cy="48" r="22" class="fw k"/><circle cx="52" cy="48" r="10" class="f2 k"/><path d="M52 48L102 10" class="k"/><path d="M94 8l8 2-2 8" class="k"/><path d="M102 10l8-2M102 10l-2 8" class="k t"/>`),
+});
 const SPARK = `<svg class="spark" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c.6 4.2 3.8 7.4 8 8-4.2.6-7.4 3.8-8 8-.6-4.2-3.8-7.4-8-8 4.2-.6 7.4-3.8 8-8z"/></svg>`;
 const THINK = label => `<div class="thinking"><i></i><i></i><i></i> ${label}</div>`;
 
@@ -927,14 +980,18 @@ function homeView() {
     <div style="flex:0 1 160px"><label class="lbl" for="setup-votes">Votes per person</label>
       <select id="setup-votes" class="field">${[2,3,4,5,6].map(n => `<option value="${n}" ${String(S.drafts["setup-votes"] ?? "3") === String(n) ? "selected" : ""}>${n} votes</option>`).join("")}</select></div>
   </div></div>
-  <div class="eyebrow">Choose a format</div>
-  <div class="methods">${Object.entries(METHODS).map(([k, v]) => `
+  <div class="section-h"><div><h2>What do you want to highlight?</h2><p>Pick a focus to see the formats that fit it best, then choose one.</p></div></div>
+  <div class="frow" role="group" aria-label="Retro focus">${FOCUS.map(([k, label]) => {
+    const n = k === "all" ? Object.keys(METHODS).length : Object.values(METHODS).filter(v => (v.tags || []).includes(k)).length;
+    return `<button class="fchip ${S.focus === k ? "on" : ""}" data-act="focusf" data-f="${k}" aria-pressed="${S.focus === k}">${esc(label)}<span>${n}</span></button>`;
+  }).join("")}</div>
+  <div class="methods">${Object.entries(METHODS).filter(([, v]) => S.focus === "all" || (v.tags || []).includes(S.focus)).sort((a, b) => S.focus === "all" ? 0 : (a[1].tags.indexOf(S.focus) - b[1].tags.indexOf(S.focus))).map(([k, v]) => `
     <button class="method ${k === m ? "sel" : ""}" data-act="pick" data-m="${k}" aria-pressed="${k === m}">
       <div class="mhead"><div><h3>${esc(v.name)}</h3><p>${esc(v.desc)}</p></div>${ILL[k] || ""}</div>
       <div class="chips">${v.cols.map((c, i) => `<span class="chip" style="--c:var(--n${i % 5 + 1})">${esc(c[1])}</span>`).join("")}</div>
-      <span class="best">${esc(v.best)}</span>
+      <div class="mfoot"><span class="best">${esc(v.best)}</span>${v.time ? `<span class="mtime">~${v.time} min</span>` : ""}</div>
     </button>`).join("")}</div>
-  <div><button class="btn primary big" data-act="start" ${canWrite() ? "" : "disabled"}>Start ${esc((S.drafts["new-sprint"] ?? ns).trim() ? "Sprint " + (S.drafts["new-sprint"] ?? ns).trim() + " retro" : "the retro")} →</button></div>
+  <div><button class="btn primary big" data-act="start" ${canWrite() ? "" : "disabled"}>Start ${esc((S.drafts["new-sprint"] ?? ns).trim() ? "Sprint " + (S.drafts["new-sprint"] ?? ns).trim() + " retro" : "the retro")} · ${esc(METHODS[S.setupMethod].name)} →</button></div>
   ${past.length ? `<div class="section-h"><div><h2>Past retros</h2><p>${plural(past.length, "retro")}. Open one to look back at its notes, actions and report.</p></div></div><div class="retros">${past.map(r => retroCard(r, false)).join("")}</div>` : ""}`;
 }
 
@@ -1249,6 +1306,12 @@ document.addEventListener("click", async e => {
   if (act !== "delretro" && S.confirmDel) { S.confirmDel = null; schedule(); }
   switch (act) {
     case "pick": S.setupMethod = el.dataset.m; schedule(); break;
+    case "focusf": {
+      S.focus = el.dataset.f;
+      const fits = Object.entries(METHODS).filter(([, v]) => S.focus === "all" || (v.tags || []).includes(S.focus)).sort((a, b) => S.focus === "all" ? 0 : a[1].tags.indexOf(S.focus) - b[1].tags.indexOf(S.focus));
+      if (fits.length && !fits.some(([k]) => k === S.setupMethod)) S.setupMethod = fits[0][0];
+      schedule(); break;
+    }
     case "start": {
       if (!canWrite()) return;
       const sprint = (S.drafts["new-sprint"] ?? nextSprint()).trim().replace(/^sprint\s*/i, "");
