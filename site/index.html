@@ -1732,7 +1732,7 @@ function zoneAt(L, px, py) {
 }
 const hKey = () => (PHASES[phase()] ? PHASES[phase()].key : "") + (S.present ? "p" : "");
 function estH(c, ns) {
-  const m = S.hc && S.hc[c.id + "|" + hKey()]; if (m) return m * ns;
+  const m = S.hc && S.hc[c.id + "|" + hKey() + "|" + ns]; if (m) return m;
   const lines = Math.min(7, Math.max(1, Math.ceil((c.text || "").length / 13))); return (40 + lines * 19 + childrenOf(c.id).length * 30) * ns;
 }
 /* Measure real note heights after each render so the column layout never overlaps; re-lay out once when they change. */
@@ -1740,10 +1740,12 @@ function measureNotes() {
   const cv = $app.querySelector(".canvas"); if (!cv) return;
   S.hc = S.hc || {}; const K = hKey(); let changed = false;
   cv.querySelectorAll(".cnote[data-id], .cnote[data-hid]").forEach(el => {
-    const id = el.dataset.id || el.dataset.hid, ns = parseFloat(el.style.getPropertyValue("--ns")) || 1, h = Math.round(el.offsetHeight / ns), key = id + "|" + K;
+    const id = el.dataset.id || el.dataset.hid, ns = parseFloat(el.style.getPropertyValue("--ns")) || 1, h = el.offsetHeight, key = id + "|" + K + "|" + ns;
     if (!S.hc[key] || Math.abs(S.hc[key] - h) > 3) { S.hc[key] = h; changed = true; }
   });
-  if (changed) schedule();
+  /* At most 3 follow-up layouts per 2 s, so a layout can never loop. */
+  const now = Date.now(); S.mRuns = (S.mRuns || []).filter(t => now - t < 2000);
+  if (changed && S.mRuns.length < 3) { S.mRuns.push(now); schedule(); }
 }
 /* Notes are always laid out in tidy columns inside their zone (no overlaps); crowded zones shrink notes, then tighten rows. */
 function notePositions(L) {
