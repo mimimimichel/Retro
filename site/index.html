@@ -405,9 +405,9 @@ label.lbl { display: block; font-size: .8rem; font-weight: 700; color: var(--mut
 .zhero .ill { width: auto; height: auto; max-width: 100%; max-height: 72%; flex: 1 1 auto; min-height: 0; filter: drop-shadow(0 18px 22px rgba(20, 24, 70, .2)); }
 .zhero .hname { font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; letter-spacing: -.01em; }
 .zhero .hsub { font-size: .82rem; color: var(--muted); max-width: 30ch; }
-.cnote { position: absolute; width: 124px; padding: 11px 9px 6px; z-index: 2; touch-action: none; cursor: grab; transform: rotate(var(--tilt)); }
+.cnote { position: absolute; width: calc(124px * var(--ns, 1)); padding: 11px 9px 6px; z-index: 2; touch-action: none; cursor: grab; transform: rotate(var(--tilt)); }
 .cnote:hover { box-shadow: var(--shadow-lift); z-index: 6; }
-.cnote .txt { font-size: 1.06rem; line-height: 1.08; }
+.cnote .txt { font-size: calc(1.06rem * var(--ns, 1)); line-height: 1.08; }
 .cnote::before { width: 46px; margin-left: -23px; height: 15px; top: -7px; }
 .cnote.static { cursor: default; touch-action: auto; }
 .cnote.dragging { cursor: grabbing; z-index: 30; box-shadow: var(--shadow-lift); transform: rotate(0deg) scale(1.06); transition: none; }
@@ -423,6 +423,8 @@ main.enter .canvas .cnote { animation: noteIn .6s cubic-bezier(.2, 1.4, .4, 1) b
 main.enter .canvas .zpill { animation: rise .6s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--base) + 150ms + var(--s, 0) * 70ms); }
 @media (prefers-reduced-motion: reduce) { main.enter .canvas .cnote, main.enter .canvas .zpill { animation: none; } }
 .sceneart { position: absolute; left: 0; top: 0; z-index: 0; overflow: visible; pointer-events: none; }
+.sceneart * { vector-effect: non-scaling-stroke; }
+main.enter .sceneart { animation: fadeIn .7s ease backwards; animation-delay: var(--base, 0s); }
 .sceneart.preview { position: static; width: 100%; height: auto; }
 .ready-scene:has(.preview) { padding: 0; }
 .sceneart .zs { fill: color-mix(in srgb, var(--zc) 58%, var(--surface)); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
@@ -738,7 +740,7 @@ main.enter .bignum { animation: numIn .9s cubic-bezier(.2, 1.3, .4, 1) backwards
 @keyframes rise { from { opacity: 0; transform: translateY(28px); } }
 @keyframes noteIn { from { opacity: 0; transform: translateY(-18px) rotate(-7deg) scale(.88); } }
 @keyframes numIn { from { opacity: 0; transform: translateY(34px) rotate(-14deg) scale(.6); } }
-main.enter .ill > *, main.enter .ill g > *, .curtain.in .ill > *, .curtain.in .ill g > *, .intro .ill > * { stroke-dasharray: 1; animation: draw 1.1s cubic-bezier(.6, 0, .3, 1) backwards, fillIn .6s ease backwards; animation-delay: calc(var(--base, 0s) + .3s), calc(var(--base, 0s) + .85s); }
+main.enter .ill:not(.sceneart) > *, main.enter .ill:not(.sceneart) g > *, .curtain.in .ill > *, .curtain.in .ill g > *, .intro .ill > * { stroke-dasharray: 1; animation: draw 1.1s cubic-bezier(.6, 0, .3, 1) backwards, fillIn .6s ease backwards; animation-delay: calc(var(--base, 0s) + .3s), calc(var(--base, 0s) + .85s); }
 .curtain.in { --base: -.1s; }
 @keyframes draw { from { stroke-dashoffset: 1; } }
 @keyframes fillIn { from { fill-opacity: 0; } }
@@ -1135,6 +1137,7 @@ function render() {
   if (enter) { const m = $app.querySelector("main"); if (m) prepEnter(m); if (!reduceMotion()) S.holdUntil = Date.now() + S.enterBase * 1000 + 1400; }
   if (fid) { const el = document.getElementById(fid); if (el) { el.focus({ preventScroll: true }); try { el.setSelectionRange(ss, se); } catch (_) {} } }
   if (S.cardsLoaded) S.cards.forEach(c => S.seen.add(c.id));
+  measureNotes();
   const wrap = $app.querySelector(".canvas-wrap");
   if (wrap) { const w = Math.max(960, Math.floor(wrap.clientWidth)); if (Math.abs(w - (S.canvasW || 0)) > 4) { S.canvasW = w; schedule(); } }
   const ph = phase();
@@ -1252,12 +1255,12 @@ function guide(k, ph) {
     mid = meter(Object.keys(S.moods).length, on, "answered");
   } else if (k === "write") {
     const mine = S.cards.filter(c => c.author === S.me).length;
-    t = meDone ? "You're done. Waiting for the others" : "Your turn: click on the drawing to stick a note";
-    sub = `Click where your note belongs, type, then Enter. ${plural(mine, "note")} from you so far; nobody can read them until the reveal.`;
+    t = meDone ? "You're done. Waiting for the others" : "Your turn: click on a zone of the drawing to stick a note";
+    sub = `Click the zone (or its +), type, then Enter. ${plural(mine, "note")} from you so far; nobody can read them until the reveal.`;
     mid = meter(doneN, on, "done"); right = doneBtn(meDone ? "Keep writing" : "I'm done");
   } else if (k === "reveal") {
     t = "Read the board together";
-    sub = "To group duplicates, drag a note onto another, or use ⧉ then click the note to stack it on.";
+    sub = "Drag a note onto another (or use ⧉) to stack duplicates. Drag it to another zone to move it there.";
     mid = `<div class="gmeter"><span>${plural(S.cards.length, "note")} on the board</span></div>`;
   } else if (k === "vote") {
     const max = sess().votesPerPerson || 3, used = votesUsed();
@@ -1671,7 +1674,7 @@ const LAYOUTS = {
   fourl: { bg: "meadow", decor: `<path d="M800 450Q860 700 960 890" class="zstem"/><circle cx="800" cy="450" r="40" class="zs2" style="--zc:var(--n1)"/>`,
     zones: [{ k: "liked", s: "circle", c: 3, x: 370, y: 120, w: 300, h: 230 }, { k: "learned", s: "circle", c: 3, x: 930, y: 120, w: 300, h: 230 }, { k: "lacked", s: "circle", c: 3, x: 370, y: 550, w: 300, h: 230 }, { k: "longed", s: "circle", c: 3, x: 930, y: 550, w: 300, h: 230 }] },
   sailboat: { bg: "sea", decor: `<path d="M520 230q60 -20 120 10M520 280q70 -10 130 20" class="zwind"/><path d="M640 390h320l-46 70H686z" class="zs2" style="--zc:var(--n2)"/><path d="M800 390V150" class="zmast"/><path d="M806 160l120 200H806z" class="zs2" style="--zc:var(--surface)"/><path d="M794 190l-96 170h96z" class="zs2" style="--zc:var(--n1)"/><path d="M700 455Q560 500 400 500" class="zchain"/>`,
-    zones: [{ k: "wind", s: "cloud", c: 4, x: 100, y: 110, w: 380, h: 200 }, { k: "island", s: "island", c: 1, x: 1110, y: 190, w: 340, h: 170 }, { k: "anchor", s: "water", c: 2, x: 120, y: 590, w: 440, h: 230 }, { k: "rocks", s: "rocks", c: 3, x: 1040, y: 620, w: 440, h: 200 }] },
+    zones: [{ k: "wind", s: "cloud", c: 4, x: 100, y: 110, w: 380, h: 200 }, { k: "island", s: "island", c: 1, x: 1050, y: 190, w: 420, h: 180 }, { k: "anchor", s: "water", c: 2, x: 120, y: 590, w: 440, h: 230 }, { k: "rocks", s: "rocks", c: 3, x: 1040, y: 620, w: 440, h: 200 }] },
   starfish: { bg: "beach", decor: `<path d="M800 160 860 380 1090 390 905 520 975 740 800 610 625 740 695 520 510 390 740 380z" class="zstar"/>`,
     zones: [{ k: "start", s: "circle", c: 1, x: 670, y: 100, w: 260, h: 190 }, { k: "stop", s: "circle", c: 2, x: 1160, y: 240, w: 260, h: 190 }, { k: "keep", s: "circle", c: 3, x: 970, y: 600, w: 260, h: 190 }, { k: "more", s: "circle", c: 4, x: 370, y: 600, w: 260, h: 190 }, { k: "less", s: "circle", c: 5, x: 180, y: 240, w: 260, h: 190 }] },
   daki: { bg: "grid", decor: embedIll("daki", 800, 470, 130),
@@ -1700,12 +1703,24 @@ const LAYOUTS = {
 };
 function sceneSVG(mk, extraCls = "", wh = "") {
   const LD = LAYOUTS[mk]; if (!LD) return "";
-  return `<svg class="ill sceneart ${extraCls}" viewBox="0 0 ${SCENE_W} ${SCENE_H}" ${wh} aria-hidden="true" focusable="false">${LD.decor || ""}${LD.zones.map(z => (SH[z.s] || SH.panel)(z, zc(z))).join("")}</svg>`;
+  return `<svg class="ill sceneart ${extraCls}" viewBox="0 0 ${SCENE_W} ${SCENE_H}" preserveAspectRatio="none" ${wh} aria-hidden="true" focusable="false">${LD.decor || ""}${LD.zones.map(z => (SH[z.s] || SH.panel)(z, zc(z))).join("")}</svg>`;
 }
-function sceneLayout(mk, W) {
-  const LD = LAYOUTS[mk], s = W / SCENE_W, rects = {}, labs = {};
-  LD.zones.forEach(z => { rects[z.k] = { x: z.x * s, y: z.y * s, w: z.w * s, h: z.h * s }; const l = z.lab || [z.x + z.w / 2, z.y - 46]; labs[z.k] = { x: l[0] * s, y: l[1] * s }; });
-  return { rects, labs, H0: Math.round(SCENE_H * s), W, s };
+function sceneLayout(mk, W, fy = S.curFy || 1) {
+  const LD = LAYOUTS[mk], s = W / SCENE_W, sy = s * fy, rects = {}, labs = {};
+  LD.zones.forEach(z => { rects[z.k] = { x: z.x * s, y: z.y * sy, w: z.w * s, h: z.h * sy }; const l = z.lab || [z.x + z.w / 2, z.y - 46]; labs[z.k] = { x: l[0] * s, y: l[1] * sy }; });
+  return { rects, labs, H0: Math.round(SCENE_H * sy), W, s, fy };
+}
+/* How much taller the board must be so every zone holds its notes without piling them up. */
+function fitFy(L) {
+  let fy = 1; const byCol = {};
+  for (const c of topCards()) (byCol[c.col] = byCol[c.col] || []).push(c);
+  for (const [col, list] of Object.entries(byCol)) {
+    const R = L.rects[col]; if (!R) continue;
+    const ns = .88, nw = NOTE_W * ns, cols = Math.max(1, Math.floor((R.w + 8) / (nw + 8))), colY = Array(cols).fill(0);
+    list.forEach(c => { let k = 0; for (let j = 1; j < cols; j++) if (colY[j] < colY[k] - 1) k = j; colY[k] += estH(c, ns) + 12; });
+    fy = Math.max(fy, (Math.max(...colY) + 24) / R.h);
+  }
+  return Math.min(2.4, fy);
 }
 const hashN = id => [...String(id)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
 function zoneAt(L, px, py) {
@@ -1715,19 +1730,37 @@ function zoneAt(L, px, py) {
   for (const k of keys) { const R = L.rects[k]; if (!R) continue; const d = Math.hypot(px - (R.x + R.w / 2), py - (R.y + R.h / 2)); if (d < bd) { bd = d; best = k; } }
   return best;
 }
+const hKey = () => (PHASES[phase()] ? PHASES[phase()].key : "") + (S.present ? "p" : "");
+function estH(c, ns) {
+  const m = S.hc && S.hc[c.id + "|" + hKey()]; if (m) return m * ns;
+  const lines = Math.min(7, Math.max(1, Math.ceil((c.text || "").length / 13))); return (40 + lines * 19 + childrenOf(c.id).length * 30) * ns;
+}
+/* Measure real note heights after each render so the column layout never overlaps; re-lay out once when they change. */
+function measureNotes() {
+  const cv = $app.querySelector(".canvas"); if (!cv) return;
+  S.hc = S.hc || {}; const K = hKey(); let changed = false;
+  cv.querySelectorAll(".cnote[data-id], .cnote[data-hid]").forEach(el => {
+    const id = el.dataset.id || el.dataset.hid, ns = parseFloat(el.style.getPropertyValue("--ns")) || 1, h = Math.round(el.offsetHeight / ns), key = id + "|" + K;
+    if (!S.hc[key] || Math.abs(S.hc[key] - h) > 3) { S.hc[key] = h; changed = true; }
+  });
+  if (changed) schedule();
+}
+/* Notes are always laid out in tidy columns inside their zone (no overlaps); crowded zones shrink notes, then tighten rows. */
 function notePositions(L) {
-  const pos = {}, autos = {};
-  for (const c of topCards().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))) {
-    if (typeof c.x === "number" && typeof c.y === "number") pos[c.id] = { x: c.x * L.W, y: c.y * L.W };
-    else (autos[c.col] = autos[c.col] || []).push(c);
-  }
-  for (const [col, list] of Object.entries(autos)) {
+  const pos = {}, byCol = {};
+  for (const c of topCards().sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))) (byCol[c.col] = byCol[c.col] || []).push(c);
+  for (const [col, list] of Object.entries(byCol)) {
     const R = L.rects[col] || Object.values(L.rects)[0];
-    const sw = NOTE_W + 8, cols = Math.max(1, Math.floor((R.w + 8) / sw)), rows = Math.ceil(list.length / cols);
-    let sh = NOTE_H + 10;
-    if (rows > 1 && rows * sh > R.h) sh = Math.max(24, (R.h - NOTE_H) / (rows - 1));
-    const used = Math.min(cols, list.length), offX = R.x + (R.w - (used * sw - 8)) / 2;
-    list.forEach((c, i) => { const h = hashN(c.id); pos[c.id] = { x: offX + (i % cols) * sw + (h % 7) - 3, y: R.y + Math.floor(i / cols) * sh + ((h >> 3) % 5) - 2 }; });
+    let best = null;
+    for (const ns of [1, .88, .76]) {
+      const nw = NOTE_W * ns, cols = Math.max(1, Math.floor((R.w + 8) / (nw + 8))), colY = Array(cols).fill(0), place = [];
+      list.forEach(c => { let k = 0; for (let j = 1; j < cols; j++) if (colY[j] < colY[k] - 1) k = j; place.push([c, k, colY[k]]); colY[k] += estH(c, ns) + 12; });
+      best = { ns, nw, cols, place, height: Math.max(...colY) };
+      if (best.height <= R.h + 24) break;
+    }
+    const squeeze = best.height > R.h + 24 ? Math.max(.55, (R.h + 24) / best.height) : 1;
+    const used = Math.min(best.cols, list.length), offX = R.x + (R.w - (used * (best.nw + 8) - 8)) / 2;
+    best.place.forEach(([c, k, y]) => { const h = hashN(c.id); pos[c.id] = { x: offX + k * (best.nw + 8) + (h % 3) - 1, y: R.y + y * squeeze, ns: best.ns }; });
   }
   return pos;
 }
@@ -1745,8 +1778,8 @@ function composer() { return ""; }
 
 function canvasNote(c, k, P, i) {
   const mine = c.author === S.me, tilt = ((hashN(c.id) % 7) - 3) * .6;
-  const base = `left:${Math.round(P.x)}px;top:${Math.round(P.y)}px;--note:${noteVar(c.col)};--tilt:${tilt}deg;--s:${Math.min(i, 20)}`;
-  if (k === "write" && (!mine || S.present)) return `<div class="note cnote hidden static" style="${base}" aria-label="Hidden note"><div class="bars"><i style="width:88%"></i><i style="width:60%"></i></div></div>`;
+  const base = `left:${Math.round(P.x)}px;top:${Math.round(P.y)}px;--note:${noteVar(c.col)};--tilt:${tilt}deg;--s:${Math.min(i, 20)};--ns:${P.ns || 1}`;
+  if (k === "write" && (!mine || S.present)) return `<div class="note cnote hidden static" style="${base}" data-hid="${c.id}" aria-label="Hidden note"><div class="bars"><i style="width:88%"></i><i style="width:60%"></i></div></div>`;
   const kids = childrenOf(c.id);
   const isNew = S.cardsLoaded && !S.seen.has(c.id);
   const draggable = !S.present && !S.mergeSrc && canWrite() && ((k === "write" && mine) || k === "reveal");
@@ -1782,7 +1815,8 @@ function boardScene(k) {
   if (k === "discuss") { S.rankMap = {}; ranked().forEach((x, i) => { S.rankMap[x.c.id] = { rank: i + 1, v: x.v }; }); }
   const mk = sess().method, LD = LAYOUTS[mk], m = method();
   if (!LD) return `<div class="board">${m.cols.map((c, i) => columnView(c, i, k)).join("")}</div>`;
-  const W = canvasW(), L = sceneLayout(mk, W), pos = notePositions(L);
+  const W = canvasW(), fy = fitFy(sceneLayout(mk, W, 1)); S.curFy = fy;
+  const L = sceneLayout(mk, W, fy), pos = notePositions(L);
   let maxB = L.H0;
   for (const c of topCards()) { const p = pos[c.id]; if (p) maxB = Math.max(maxB, p.y + NOTE_H + 34 + childrenOf(c.id).length * 26); }
   const H = Math.round(maxB);
