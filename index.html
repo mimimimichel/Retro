@@ -1048,7 +1048,16 @@ function participants() {
 /* ---------- render ---------- */
 let raf = 0;
 let holdT = 0;
+/* Don't swap the DOM under a pressed pointer (the click would be lost) or during IME composition (accents). */
+let pressPrev = 0, pressing = false, composing = false;
+document.addEventListener("pointerdown", () => { pressing = true; pressPrev = S.holdUntil; if (S.holdUntil < Date.now() + 1500) S.holdUntil = Date.now() + 1500; }, true);
+const pressEnd = () => { if (!pressing) return; pressing = false; setTimeout(() => { if (!drag) { S.holdUntil = Math.min(S.holdUntil, pressPrev); schedule(); } }, 0); };
+document.addEventListener("pointerup", pressEnd, true);
+document.addEventListener("pointercancel", pressEnd, true);
+document.addEventListener("compositionstart", () => { composing = true; }, true);
+document.addEventListener("compositionend", () => { composing = false; schedule(); }, true);
 function schedule() {
+  if (composing) { if (!holdT) holdT = setTimeout(() => { holdT = 0; schedule(); }, 300); return; }
   const wait = S.holdUntil - Date.now();
   if (wait > 0) { if (!holdT) holdT = setTimeout(() => { holdT = 0; schedule(); }, wait + 20); return; }
   if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); });
@@ -2385,6 +2394,7 @@ async function init() {
       if (!(S.session && S.session.createdAt > Date.now() - 10000)) { subscribeBoard(null); S.session = null; toast("That retro was deleted."); }
     } else S.session = r || null;
     const nph = phase();
+    if (S.bid && S.shownPh !== undefined && nph !== S.shownPh) { S.mergeSrc = null; S.inlineNew = null; S.editing = null; S.menu = null; S.confirmReset = false; }
     if (S.bid && S.shownPh !== undefined && S.shownPh >= 0 && nph !== S.shownPh && !(isDone() && S.viewPhase != null)) transition(nph);
     S.shownPh = nph;
     schedule();
