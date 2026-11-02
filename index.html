@@ -627,6 +627,41 @@ kbd { font-family: var(--f-mono); font-size: .78rem; background: var(--accent-so
 .nowacts { display: flex; gap: 8px; margin-top: auto; }
 .nowcard:not(.empty-now) .btn { background: var(--note-ink); color: var(--note); border-color: var(--note-ink); box-shadow: none; }
 
+/* Landing */
+.land-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(24px, 4vw, 64px); align-items: center; padding-block: clamp(8px, 3vw, 36px) 8px; }
+@media (max-width: 860px) { .land-hero { grid-template-columns: 1fr; } }
+.lh-text h2 { font-size: clamp(2.6rem, 6vw, 4.8rem); font-weight: 800; letter-spacing: -.035em; line-height: .98; }
+.lh-text h2 em { font-style: normal; color: var(--pop); }
+.lh-text p { color: var(--muted); font-size: clamp(1rem, 1.3vw, 1.15rem); max-width: 46ch; margin: 16px 0 24px; }
+.lh-shot { position: relative; transform: rotate(1.2deg); }
+.shot-board { position: relative; border-radius: 26px; overflow: hidden; box-shadow: var(--shadow-lift), 0 0 0 6px color-mix(in srgb, var(--surface) 70%, transparent); isolation: isolate; }
+.shot-board .sceneart.preview { display: block; }
+.shot-note { position: absolute; width: 22%; padding: 9px 8px 10px; transform: rotate(var(--tilt)); }
+.shot-note::before { width: 40px; margin-left: -20px; height: 12px; top: -6px; }
+.shot-note .txt { font-size: clamp(.8rem, 1.15vw, 1.05rem); line-height: 1.05; }
+.howstrip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .howstrip { grid-template-columns: 1fr; } }
+.hs { position: relative; display: flex; align-items: center; gap: 14px; background: var(--surface); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+.hs .ill { width: 64px; flex: none; }
+.hs b { display: block; font-family: var(--f-display); font-size: 1.05rem; font-weight: 800; }
+.hs span:not(.hsn) { font-size: .88rem; color: var(--muted); }
+.hsn { position: absolute; top: -10px; left: -6px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--pop); color: var(--pop-ink); font-weight: 800; font-size: .8rem; box-shadow: var(--shadow); }
+.home-sec { display: flex; flex-direction: column; gap: 14px; }
+.livelist, .rlist { display: flex; flex-direction: column; gap: 10px; }
+.livecard { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: var(--surface); border: 2px solid var(--good); border-radius: var(--r); padding: 16px 22px; box-shadow: var(--shadow); }
+.livecard .lc-ill { width: 96px; flex: none; }
+.livecard .lc-main { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.livecard h3 { font-size: clamp(1.3rem, 2.2vw, 1.7rem); font-weight: 800; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.livecard p { margin: 0; color: var(--muted); }
+.rrowc { display: grid; grid-template-columns: 64px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.2fr) auto; align-items: center; gap: 12px 20px; background: var(--surface); border-radius: var(--r); padding: 12px 18px; box-shadow: var(--shadow); transition: transform .15s ease, box-shadow .15s ease; }
+.rrowc:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.rr-ill .ill { width: 64px; }
+.rr-sprint { font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; letter-spacing: -.02em; }
+.rr-title { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+.rr-meta { display: flex; flex-direction: column; gap: 2px; font-size: .88rem; font-weight: 600; }
+.rr-acts { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+@media (max-width: 860px) { .rrowc { grid-template-columns: 56px minmax(0, 1fr) auto; } .rr-meta, .rr-stats { grid-column: 2 / -1; } .rr-acts { grid-column: 1 / -1; justify-content: flex-start; } }
+
 /* Signature */
 .sig { text-align: center; padding: 6px 0 0; font-size: .8rem; color: var(--muted); letter-spacing: .02em; }
 .sig b { font-family: var(--f-display); font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
@@ -1481,25 +1516,48 @@ function retroCard(r, live) {
   </article>`;
 }
 
+function liveBanner(r) {
+  const m = METHODS[r.method] || METHODS.ssc, n = hereCount(r.id);
+  const date = new Date(r.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return `<article class="livecard"><div class="lc-ill">${ILL[r.method] || ""}</div>
+    <div class="lc-main"><span class="pill-live">Live now${n ? ` · ${n} here` : ""}</span><h3>${esc(retroName(r))}</h3><p>${esc(m.name)} · started ${date}</p></div>
+    <button class="btn primary big" data-act="open" data-id="${r.id}">Join the retro →</button></article>`;
+}
+function retroRow(r) {
+  const m = METHODS[r.method] || METHODS.ssc, st = r.stats || {};
+  const date = new Date(r.createdAt || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const canDel = S.me && (S.isOwner || r.facilitator === S.me);
+  const stats = [st.notes != null ? plural(st.notes, "note") : null, st.actions != null ? plural(st.actions, "action") : null, st.roti ? `ROTI ${st.roti}/5` : null].filter(Boolean);
+  return `<article class="rrowc"><div class="rr-ill">${ILL[r.method] || ""}</div>
+    <div class="rr-main"><div class="rr-sprint">${esc(r.sprint ? "Sprint " + r.sprint : "Retro")}</div><div class="rr-title">${esc(r.title || "Retro")}</div></div>
+    <div class="rr-meta"><span>${esc(m.name)}</span><span class="pill-done">${r.status === "done" ? "Closed" : "Paused"} · ${date}</span></div>
+    <div class="rstats rr-stats">${stats.map(t => `<span>${esc(t)}</span>`).join("")}</div>
+    <div class="rr-acts"><button class="btn" data-act="open" data-id="${r.id}">Open</button>${canDel ? `<button class="btn sm ghost danger" data-act="delretro" data-id="${r.id}">${S.confirmDel === r.id ? "Confirm" : "Delete"}</button>` : ""}</div></article>`;
+}
 function homeView() {
   if (S.view === "new") return newRetroView();
   const live = liveRetros(), liveIds = new Set(live.map(r => r.id));
   const past = S.retros.filter(r => !liveIds.has(r.id)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  return `<section class="home-hero"><div>
+  const shotNotes = [["n1", 11, 26, -4, "Clear goals for the demo"], ["n2", 41, 17, 3, "Pairing saved us days"], ["n5", 73, 22, -2, "Release freeze risk"], ["n3", 71, 70, 2, "Too many meetings"]];
+  return `<section class="land-hero">
+    <div class="lh-text">
       <div class="eyebrow">Sprint retrospectives</div>
       <h2>Look back.<br>Move <em>forward.</em></h2>
-      <p>One retro per sprint. Join the one happening now, or start a new one and share the link with your team.</p>
+      <p>Run your sprint retro on one live, illustrated board. Everyone joins from a link, writes in private, votes, and leaves with clear actions.</p>
       <div class="cta-row"><button class="btn primary big" data-act="newretro" ${canWrite() ? "" : "disabled"}>＋ New retro</button><button class="btn big" data-act="help">How it works</button></div>
     </div>
-    <div class="stack" aria-hidden="true">
-      <div class="note"><p class="txt">Pairing on the API saved us days</p></div>
-      <div class="note"><p class="txt">Too many meetings on Thursday</p></div>
-      <div class="note"><p class="txt">Ship smaller PRs!</p></div>
-    </div></section>
-  ${live.length ? `<div class="section-h"><div><h2>Happening now</h2><p>Your team is in there. Jump in.</p></div></div><div class="retros">${live.map(r => retroCard(r, true)).join("")}</div>` : ""}
-  <div class="section-h"><div><h2>${live.length ? "Past retros" : "Your retros"}</h2>${past.length ? `<p>${plural(past.length, "retro")}. Open one to look back at its notes, actions and report.</p>` : ""}</div></div>
-  ${past.length ? `<div class="retros">${past.map(r => retroCard(r, false)).join("")}</div>`
-    : `<div class="empty-state">${ILL.reveal}<h3>${live.length ? "No past retros yet" : "No retros yet"}</h3><p>${live.length ? "When a retro is closed, it lands here with its notes, actions and report." : "Start your first retro: it takes about a minute to set up."}</p>${live.length ? "" : `<button class="btn primary" data-act="newretro" ${canWrite() ? "" : "disabled"}>＋ New retro</button>`}</div>`}`;
+    <div class="lh-shot" aria-hidden="true"><div class="shot-board bg-sky">${sceneSVG("balloon", "preview")}
+      ${shotNotes.map(([c, x, y, r, t]) => `<div class="note shot-note" style="--note:var(--${c});left:${x}%;top:${y}%;--tilt:${r}deg"><p class="txt">${t}</p></div>`).join("")}</div></div>
+  </section>
+  <section class="howstrip" aria-label="How a retro runs">
+    <div class="hs"><span class="hsn">1</span>${ILL.write}<div><b>Create the retro</b><span>Pick the sprint and a format that fits what you want to highlight.</span></div></div>
+    <div class="hs"><span class="hsn">2</span>${ILL.discuss}<div><b>Share the link</b><span>People join from any browser with their first name. No account needed.</span></div></div>
+    <div class="hs"><span class="hsn">3</span>${ILL.roti}<div><b>Run it together</b><span>Seven guided steps, from the team weather to clear actions and a ROTI.</span></div></div>
+  </section>
+  ${live.length ? `<section class="home-sec"><div class="section-h"><div><h2>Happening now</h2><p>Your team is in there. Jump in.</p></div></div><div class="livelist">${live.map(liveBanner).join("")}</div></section>` : ""}
+  <section class="home-sec"><div class="section-h"><div><h2>${live.length ? "Past retros" : "Your retros"}</h2>${past.length ? `<p>${plural(past.length, "retro")}. Open one to look back at its notes, actions and report.</p>` : ""}</div></div>
+  ${past.length ? `<div class="rlist">${past.map(retroRow).join("")}</div>`
+    : `<div class="empty-state">${ILL.reveal}<h3>${live.length ? "No past retros yet" : "No retros yet"}</h3><p>${live.length ? "When a retro is closed, it lands here with its notes, actions and report." : "Start your first retro: it takes about a minute to set up."}</p>${live.length ? "" : `<button class="btn primary" data-act="newretro" ${canWrite() ? "" : "disabled"}>＋ New retro</button>`}</div>`}</section>`;
 }
 
 function fitMethods() {
